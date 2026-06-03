@@ -1,59 +1,62 @@
 import streamlit as st
 import qrcode
-from PIL import Image
+from io import BytesIO
 
-# إعدادات الصفحة
-st.set_page_config(page_title="SSE Solar App", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="SSE - المهندس الأمين", layout="centered")
 
-# محاولة تحميل الصورة
-try:
-    # تأكدي أن اسم الملف في GitHub مطابق تماماً لهذا الاسم
-    image = Image.open('1000224141.jpg')
-    st.image(image, width=150)
-except:
-    st.write("ملاحظة: الصورة غير موجودة في المجلد")
+# 2. الهوية البصرية (ضعي رابط شعارك هنا)
+st.image("https://i.imgur.com/your_logo_here.png", width=150)
+st.title("🛡️ SSE - المهندس الرقمي المتكامل")
 
-st.title("SSE - نظام الطاقة الشمسية الذكي")
-st.write("حلول هندسية عالمية لبيانات الأقمار الصناعية")
+# 3. قاعدة بيانات الأجهزة
+devices = {
+    "مصباح (20W)": 20, "مروحة (80W)": 80, 
+    "تلفاز (100W)": 100, "ثلاجة (150W)": 150
+}
 
-# جمع البيانات مع إضافة مدينة عطبرة
-city = st.selectbox("حدد موقع مشروعك:", ["أم درمان", "الخرطوم", "عطبرة", "بورتسودان", "نيالا", "دنقلا"])
-st.write(f"جاري جلب بيانات القمر الصناعي لموقع: {city}")
+# 4. الترحيب والأفاتار
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "assistant", "content": "أهلاً بكِ يا بشمهندسة! أنا مساعدكِ الرقمي الموثوق. كيف يمكنني مساعدتكِ في حساب أحمالكِ اليوم؟"}]
 
-# الدالة الأساسية للحسابات
-def calculate_system(load_watts, distance, breaker_amps):
-    total_power = load_watts * 1.25
-    cable_size = (distance * (total_power / 220) * 0.0175) / 6.6
-    alerts = []
-    if (total_power / 220) > (breaker_amps * 0.8):
-        alerts.append("⚠️ خطر: القاطع غير مناسب للحمل!")
-    if cable_size > 6.0:
-        alerts.append("⚠️ تحذير: الكبل يتطلب مقاساً أكبر من 6 ملم.")
-    return total_power, cable_size, alerts
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else "👤"):
+        st.markdown(msg["content"])
 
-# المدخلات من المستخدم
-load = st.number_input("إجمالي الحمل (وات):", min_value=100)
-dist = st.number_input("المسافة (متر):", min_value=1)
-brk = st.number_input("حجم القاطع (أمبير):", min_value=1)
+# 5. التفاعل الهندسي
+selected = st.multiselect("اختاري الأجهزة:", list(devices.keys()))
+dist = st.number_input("المسافة (متر):", min_value=1, value=10)
 
-# زر التحليل
-if st.button("تحليل الأمان المقر"):
-    power, cable, notifications = calculate_system(load, dist, brk)
-    st.success(f"القدرة المطلوبة: {power:.2f} وات")
-    st.info(f"المقطع العرضي للكبل: {cable:.1f} مم")
-    
-    if notifications:
-        for alert in notifications:
-            st.error(alert)
+if st.button("تحليل المنظومة"):
+    if selected:
+        total = sum([devices[d] for d in selected])
+        current = total / 220
+        breaker = current * 1.25
+        batt_ah = ((total * 6) / 0.2) / 12
+        cable = (current * dist * 0.0175) / (220 * 0.03)
+        
+        report = f"""
+        ### 📊 نتائج التصميم الهندسي:
+        - **الحمل الكلي:** {total} وات
+        - **القاطع المناسب:** {breaker:.1f} أمبير
+        - **البطارية:** {int(batt_ah)} أمبير/ساعة
+        - **مقطع السلك:** {cable:.2f} مم²
+        """
+        
+        with st.chat_message("assistant", avatar="🤖"):
+            st.markdown(report)
+            st.session_state.messages.append({"role": "assistant", "content": report})
+            
+            # ذكاء تفاعلي: نصيحة إضافية
+            if total > 500:
+                st.warning("💡 **نصيحة المهندس:** حملكِ مرتفع، هل تريدين حساب تكلفة التبريد؟")
     else:
-        st.write("✅ النظام آمن ومطابق للمواصفات.")
+        st.warning("يرجى اختيار جهاز واحد على الأقل.")
 
-    # التوقيع الرقمي (QR Code)
-    qr = qrcode.make(f"SSE-Verified-Report: {load}W - {city}")
-    st.image(qr, caption="باركود التحقق من أصالة التقرير")
-
-st.write("---")
-st.subheader("شكر خاص")
-st.write("نحن نحرص على سلامة طاقتكم ومستقبل منشآتكم.")
-st.write("للتواصل والدعم الفني: support@sse-energy.sd")
-
+# 6. التوثيق الشخصي
+st.sidebar.subheader("للتواصل والتوثيق")
+st.sidebar.write("📧 electricgirl804@gmail.com")
+qr = qrcode.make("Verified SSE - Contact: electricgirl804@gmail.com")
+buffer = BytesIO()
+qr.save(buffer, format="PNG")
+st.sidebar.image(buffer.getvalue(), caption="باركود التحقق")
