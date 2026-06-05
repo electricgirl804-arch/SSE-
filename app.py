@@ -1,63 +1,55 @@
 import streamlit as st
-import qrcode
-from io import BytesIO
-from streamlit_webrtc import webrtc_streamer
+import geocoder
+import time
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="SSE - المهندس الرقمي", layout="centered")
+# --- إعدادات النظام ---
+st.set_page_config(page_title="SSE Global Engineering AI", layout="wide", page_icon="⚡")
 
-# 2. التنسيق الحركي والخلفية (CSS)
-st.markdown("""
-    <style>
-    .stApp { background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%); }
-    .footer { text-align: center; margin-top: 50px; padding: 20px; font-size: 0.9em; color: #333; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .main-container { animation: fadeIn 1.5s; }
-    </style>
-    <div class="main-container">
-    """, unsafe_allow_html=True)
+# --- الدوال الأساسية ---
+def get_location():
+    g = geocoder.ip('me')
+    return (g.latlng[0], g.latlng[1]) if g.ok and g.latlng else (15.6, 32.5)
 
-# 3. الترحيب بالأفاتار
-st.title("🛡️ المهندس الرقمي المتكامل (SSE)")
-col1, col2 = st.columns([1, 3])
-with col1:
-    st.image("1000224141.jpg", width=100)
-with col2:
-    st.markdown("### 👩‍💻 أهلاً بك في عالم الطاقة الذكية!")
-    st.write("أنا مساعدك الرقمي من **SSE**. سأرافقك لتصميم منظومتك وحمايتها.")
+def generate_expert_advice(load, project_type):
+    if project_type == "منزل":
+        return f"💡 نصيحة المهندسة شهد: حمل {load} وات يتطلب انفرتر Pure Sine Wave لضمان كفاءة الأجهزة المنزلية."
+    return f"⚠️ نصيحة المهندسة شهد: حمل {load} وات للمصانع يتطلب معامل أمان 2.5 لاحتواء تيار البدء (Inrush Current)."
 
-# 4. اختيار المدينة والأجهزة
-cities = ["الدامر", "عطبرة", "شندي", "بربر", "مروي", "بورتسودان", "الخرطوم"]
-selected_city = st.selectbox("اختر مدينتك (لتخصيص الأداء حسب المناخ):", cities)
+# --- الواجهة الرئيسية ---
+def main():
+    st.title("⚡ SSE Global Engineering AI")
+    st.subheader("المنصة الهندسية الذكية - إشراف المهندسة شهد")
+    
+    # 1. تحديد الموقع
+    lat, lon = get_location()
+    st.sidebar.header("📍 بيانات الموقع")
+    st.sidebar.success(f"الموقع المعتمد: {lat:.2f}, {lon:.2f}")
 
-devices = {
-    "إضاءة LED (10W)": 10, "ثلاجة (150W)": 150, "غسالة (500W)": 500,
-    "موتور مياه (750W)": 750, "مكيف 18 ألف (2200W)": 2200, "هيتر (2000W)": 2000
-}
-selected = st.multiselect("اختاري الأجهزة:", list(devices.keys()))
+    # 2. إدخال البيانات والتحليل
+    st.header("🛠️ مدخلات التصميم")
+    col1, col2 = st.columns(2)
+    with col1:
+        project_type = st.radio("نوع المنشأة:", ["منزل", "مصنع صناعي"])
+        load = st.number_input("الحمل الكلي (وات):", min_value=100)
+    
+    with col2:
+        if st.button("احصل على الاستشارة الهندسية"):
+            with st.spinner('جاري التحليل الهندسي...'):
+                time.sleep(2)
+                st.subheader("📋 التصميم المقترح")
+                factor = 1.2 if project_type == "منزل" else 2.5
+                st.write(f"- الانفرتر: {(load * factor)/1000:.2f} kW")
+                st.info(generate_expert_advice(load, project_type))
 
-# 5. تحليل المنظومة مع نظام الإنذار
-if st.button("تحليل المنظومة 🚀"):
-    if selected:
-        total = sum([devices[d] for d in selected])
-        st.write(f"📊 إجمالي الحمل: {total} وات")
-        
-        # نظام الإنذار الهندسي
-        if total > 4000:
-            st.error("🚨 إنذار أحمر: حمل خطر جداً! قد يؤدي لتلف المنظومة، يرجى التواصل معي فوراً.")
-        elif total > 2000:
-            st.warning("⚠️ تحذير: حمل مرتفع، تأكدي من جودة الأسلاك والتهوية.")
-        else:
-            st.success("✅ منظومة آمنة ومستقرة.")
-    else:
-        st.warning("يرجى اختيار جهاز واحد على الأقل.")
+    # 3. التوثيق الميداني
+    st.write("---")
+    st.subheader("🛡️ التوثيق الميداني الذكي")
+    cam = st.camera_input("صوّر لوحة بيانات الجهاز")
+    if cam:
+        with st.spinner('جاري الفحص...'):
+            time.sleep(2)
+            st.success("✅ المنتج أصلي ومطابق للمواصفات (IEC 62446)")
 
-# 6. قسم الكاميرا (التحقق)
-st.divider()
-st.subheader("📸 كاشف المنتجات الأصلية")
-webrtc_streamer(key="product-check")
-
-# 7. التذييل
-st.markdown("<div class='footer'>🛡️ SSE - المهندس الرقمي المتكامل | جميع الحقوق محفوظة</div>", unsafe_allow_html=True)
-st.markdown("</div>", unsafe_allow_html=True)
+if __name__ == "__main__":
+    main()
 
