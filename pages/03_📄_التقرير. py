@@ -1,0 +1,90 @@
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+
+st.set_page_config(page_title="تقرير SSE", layout="wide")
+st.title("📄 عرض سعر - SSE Smart Solar")
+
+if 'num_panels' not in st.session_state:
+    st.error("لا توجد بيانات محسوبة")
+    st.warning("ارجع للصفحة الرئيسية واحسب الأحمال أولاً")
+    st.stop()
+
+st.success("تم تحميل البيانات بنجاح")
+
+st.header("1. بيانات العميل والمشروع")
+col1, col2, col3 = st.columns(3)
+with col1:
+    client_name = st.text_input("اسم العميل", "أ. محمد أحمد")
+with col2:
+    client_phone = st.text_input("رقم الهاتف", "0912xxxxxx")
+with col3:
+    project_date = st.date_input("تاريخ العرض", datetime.now())
+
+st.divider()
+st.header("2. ملخص النظام المقترح")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("عدد الألواح", f"{st.session_state.num_panels} لوح", "550W Mono PERC")
+col2.metric("عدد البطاريات", f"{st.session_state.num_batteries} بطارية", "48V 200Ah LiFePO4")
+col3.metric("قدرة الانفرتر", f"{st.session_state.inverter_kw} kW", "هجين MPPT")
+col4.metric("الطاقة اليومية", f"{st.session_state.energy_kwh:.1f} kWh")
+
+st.divider()
+st.header("3. جدول الكميات والأسعار التقديرية")
+
+price_panel = st.number_input("سعر اللوح 550W بالدولار", value=85)
+price_battery = st.number_input("سعر البطارية 48V بالدولار", value=280)
+price_inverter = st.number_input("سعر الانفرتر بالدولار", value=450)
+
+data = {
+    "م": [1, 2, 3, 4, 5],
+    "البيان": [
+        "ألواح شمسية 550W Monocrystalline PERC",
+        "بطاريات ليثيوم 48V 200Ah LiFePO4",
+        "انفرتر هجين MPPT مدمج",
+        "كيبل DC + فيوز + قاطع + مانعة صواعق",
+        "تركيب وبرمجة وتشغيل"
+    ],
+    "الكمية": [
+        f"{st.session_state.num_panels} لوح",
+        f"{st.session_state.num_batteries} بطارية",
+        f"{st.session_state.inverter_kw} kW",
+        "طقم كامل",
+        "شامل"
+    ],
+    "سعر الوحدة $": [price_panel, price_battery, price_inverter, "-", "-"],
+    "الإجمالي $": [
+        st.session_state.num_panels * price_panel,
+        st.session_state.num_batteries * price_battery,
+        st.session_state.inverter_kw * price_inverter,
+        st.session_state.num_panels * 12,
+        st.session_state.num_panels * 15
+    ]
+}
+
+df = pd.DataFrame(data)
+st.dataframe(df, use_container_width=True, hide_index=True)
+total = df["الإجمالي $"].sum()
+st.metric("الإجمالي الكلي التقديري شامل التركيب", f"${total:,.0f}")
+
+st.divider()
+st.header("4. المواصفات الفنية والحسابات الهندسية")
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("الموقع والإشعاع الشمسي")
+    st.write(f"خط العرض: {st.session_state.lat:.4f}°")
+    st.write(f"الإشعاع GHI: {st.session_state.ghi_final:.2f} kWh/m²/day")
+    st.write(f"زاوية الميل: {st.session_state.final_tilt:.1f}°")
+
+with col2:
+    st.subheader("الحمايات والكيبل حسب IEC")
+    st.write(f"مقطع كيبل DC: {int(st.session_state.cable_mm2)} mm² نحاس")
+    st.write(f"قيمة الفيوز DC: {int(st.session_state.fuse_dc)} A")
+    st.write(f"قيمة القاطع AC: {int(st.session_state.breaker_ac)} A")
+    st.write(f"فترة الاسترجاع: {st.session_state.payback:.1f} سنة")
+
+if st.button("🖨️ جهز للطباعة PDF", use_container_width=True, type="primary"):
+    st.balloons()
+    st.success("جاهز! اضغط Ctrl+P من لوحة المفاتيح واختر Save as PDF")
+
+st.caption("شركة SSE للطاقة الشمسية | حسابات هندسية 100% | داتا ناسا 20 سنة")
