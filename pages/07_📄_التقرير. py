@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from io import BytesIO
+from reportlab.pdfgen import canvas
 
 st.set_page_config(page_title="تقرير SSE", layout="wide")
 st.title("📄 عرض سعر - SSE Smart Solar")
@@ -83,8 +85,40 @@ with col2:
     st.write(f"قيمة القاطع AC: {int(st.session_state.breaker_ac)} A")
     st.write(f"فترة الاسترجاع: {st.session_state.payback:.1f} سنة")
 
-if st.button("🖨️ جهز للطباعة PDF", use_container_width=True, type="primary"):
-    st.balloons()
-    st.success("جاهز! اضغط Ctrl+P من لوحة المفاتيح واختر Save as PDF")
+st.divider()
+st.header("5. تحرير التقرير وحفظه")
 
-st.caption("شركة SSE للطاقة الشمسية | حسابات هندسية 100% | داتا ناسا 20 سنة")
+report_text = f"""عرض سعر - SSE Smart Solar
+
+بيانات العميل: {client_name}
+رقم الهاتف: {client_phone}
+تاريخ العرض: {project_date}
+
+ملخص النظام:
+- عدد الألواح: {st.session_state.num_panels} لوح 550W Mono PERC
+- عدد البطاريات: {st.session_state.num_batteries} بطارية 48V 200Ah LiFePO4
+- قدرة الانفرتر: {st.session_state.inverter_kw} kW هجين MPPT
+- الطاقة اليومية: {st.session_state.energy_kwh:.1f} kWh
+
+جدول الأسعار التقديرية بالدولار:
+{df.to_string(index=False)}
+
+الإجمالي الكلي: ${total:,.0f}
+
+المواصفات الفنية:
+- خط العرض: {st.session_state.lat:.4f}°
+- الإشعاع GHI: {st.session_state.ghi_final:.2f} kWh/m²/day
+- زاوية الميل: {st.session_state.final_tilt:.1f}°
+- مقطع كيبل DC: {int(st.session_state.cable_mm2)} mm²
+- قيمة الفيوز: {int(st.session_state.fuse_dc)} A
+- قيمة القاطع: {int(st.session_state.breaker_ac)} A
+- فترة الاسترجاع: {st.session_state.payback:.1f} سنة
+
+ملاحظات:
+الأسعار تقديرية وقابلة للتعديل حسب السوق
+يشمل العرض التركيب والضمان حسب المواصفات
+مدة التنفيذ تحدد بعد معاينة الموقع
+شركة SSE للطاقة الشمسية
+"""
+
+edited_report = st.text_area("ت
