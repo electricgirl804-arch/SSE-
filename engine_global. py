@@ -1,0 +1,5 @@
+def calculate_load(devices):
+    total_watt = sum([d['watt'] * d['hours'] for d in devices])
+    battery_ah = (total_watt * 1.3) / 12
+    panels_watt = total_watt * 1.5
+    return total_watt, battery_ah, panels_watt
