@@ -1,0 +1,9 @@
+import streamlit as st
+st.title("🏠 الرئيسية")
+st.image("logo.png", width=200)
+st.markdown("## منصة SSE للطاقة الشمسية")
+col1, col2, col3 = st.columns(3)
+col1.metric("عملاء", "1200+")
+col2.metric("منظومة مركبة", "850+")
+col3.metric("سنوات خبرة", "8")
+st.markdown("حلول طاقة شمسية متكاملة في السودان")
