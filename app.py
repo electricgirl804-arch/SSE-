@@ -5,7 +5,14 @@ import requests
 import streamlit.components.v1 as components
 import math
 
-st.set_page_config(page_title="منصة SSE الذكية", layout="wide", initial_sidebar_state="expanded")
+# دا سطر واحد بس للأيقونة + الإعدادات
+st.set_page_config(
+    page_title="Smart Solar Engineering",
+    page_icon="logo.png",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 st.title("☀️ منصة SSE الذكية للحسابات الهندسية")
 st.caption("تحديد الموقع عبر GPS + بيانات ناسا + حساب زاوية الميل + قياس ميل السطح + معايير IEC")
 
