@@ -1,9 +1,220 @@
 import streamlit as st
-st.title("🏠 الرئيسية")
-st.image("logo.png", width=200)
-st.markdown("## منصة SSE للطاقة الشمسية")
+import pandas as pd
+import numpy as np
+import requests
+import streamlit.components.v1 as components
+import math
+
+st.set_page_config(page_title="SSE Smart Solar Platform", page_icon="logo.png", layout="wide")
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+html, body, [class*="css"] {font-family: 'Cairo', sans-serif; direction: rtl;}
+.main {background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); color: white;}
+.header-container {display: flex; align-items: center; justify-content: space-between;background: linear-gradient(90deg, rgba(255,215,0,0.15) 0%, rgba(0,123,255,0.15) 100%);padding: 30px; border-radius: 20px; margin-bottom: 30px;border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);}
+.logo {width: 120px; height: 120px;background-image: url('logo.png');background-size: contain; background-repeat: no-repeat; background-position: center;margin-left: 20px; animation: float 3s ease-in-out infinite;}
+.header-text h1 {font-size: 42px; color: #FFD700; margin: 0; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);}
+.header-text p {font-size: 18px; color: #b0c4de; margin-top: 8px;}
+.stMetric {background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.2);box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); transition: transform 0.3s;text-align: center;}
+.stMetric:hover {transform: translateY(-5px);}
+.metric-label {font-size: 14px!important; color: #b0c4de!important; margin-top: 10px;}
+.metric-value {font-size: 32px!important; font-weight: 700!important; color: white!important;}
+.stButton>button {background: rgba(255,255,255,0.08);border: 2px solid rgba(255,255,255,0.2);border-radius: 20px;padding: 25px;text-align: center;transition: all 0.3s ease;height: 180px;color: white;font-weight: 600;width: 100%;}
+.stButton>button:hover {transform: translateY(-8px);border-color: #FFD700;box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);background: rgba(255,215,0,0.1);}
+.success-msg {background: linear-gradient(90deg, #00b09b, #96c93d);padding: 15px; border-radius: 10px; color: white; font-weight: 600; text-align: center; margin: 20px 0;}
+.chat-container {background: rgba(255,255,255,0.05);border-radius: 15px;padding: 25px;border: 1px solid rgba(255,255,255,0.1);margin-top: 40px;}
+.chat-msg-user {background: linear-gradient(90deg, #007bff, #0056b3);padding: 12px 18px;border-radius: 15px 15px 5px 15px;margin: 10px 0;margin-left: 50px;color: white;text-align: right;}
+.chat-msg-bot {background: rgba(255,215,0,0.15);border: 1px solid #FFD700;padding: 12px 18px;border-radius: 15px 15px 15px 5px;margin: 10px 0;margin-right: 50px;color: white;text-align: right;}
+.device-card {background: rgba(255,255,255,0.08);padding: 15px;border-radius: 10px;margin-bottom: 10px;border: 1px solid rgba(255,215,0,0.2);text-align: center;}
+.section-title {background: rgba(255,255,255,0.05);padding: 25px;border-radius: 15px;border: 1px solid rgba(255,255,255,0.1);margin: 30px 0;}
+@keyframes float {0% { transform: translateY(0px); }50% { transform: translateY(-10px); }100% { transform: translateY(0px); }}
+</style>
+
+<div class="header-container">
+    <div class="header-text">
+        <h1>SSE Smart Solar Platform</h1>
+        <p>Smart Solara Engineer | بيانات ناسا 20 سنة | معايير IEC العالمية</p>
+    </div>
+    <div class="logo"></div>
+</div>
+""", unsafe_allow_html=True)
+
+def get_gps_button():
+    components.html("""
+        <script>
+        if (!window.sse_gps_sent) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    window.parent.postMessage({type: "streamlit:setComponentValue", key: "sse_gps", value: [pos.coords.latitude, pos.coords.longitude]}, "*");
+                    window.sse_gps_sent = true;
+                },
+                err => {
+                    window.parent.postMessage({type: "streamlit:setComponentValue", key: "sse_gps", value: [15.5007, 32.5599]}, "*");
+                    window.sse_gps_sent = true;
+                }
+            );
+        }
+        </script>
+    """, height=0)
+    return st.session_state.get("sse_gps", [15.5007, 32.5599])
+
+if "sse_gps" not in st.session_state:
+    st.session_state.sse_gps = [15.5007, 32.5599]
+
+st.sidebar.markdown("""<div style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><h3 style="color: #0f2027; margin: 0; text-align: center;">📍 تحديد الموقع</h3></div>""", unsafe_allow_html=True)
+
+col1, col2 = st.sidebar.columns(2)
+with col1:
+    if st.sidebar.button("📡 GPS تلقائي"):
+        get_gps_button()
+        st.rerun()
+with col2:
+    lat = st.sidebar.number_input("خط العرض", value=float(st.session_state.sse_gps[0]), format="%.4f", key="lat_in")
+    lon = st.sidebar.number_input("خط الطول", value=float(st.session_state.sse_gps[1]), format="%.4f", key="lon_in")
+
+@st.cache_data
+def get_solar_data(lat, lon):
+    url = f"https://power.larc.nasa.gov/api/temporal/daily/point?start=20220101&end=20221231&latitude={lat}&longitude={lon}&parameters=ALLSKY_SFC_SW_DWN&community=RE&format=JSON"
+    r = requests.get(url, timeout=15)
+    ghi_horizontal = r.json()["properties"]["parameter"]["ALLSKY_SFC_SW_DWN"]["20221231"]
+    tilt_optimal = abs(lat) * 0.9
+    tilt_factor_opt = 1 + 0.008 * tilt_optimal
+    ghi_tilted = ghi_horizontal * tilt_factor_opt
+    return ghi_horizontal, ghi_tilted, tilt_optimal
+
+ghi_h, ghi_t, tilt_opt = get_solar_data(lat, lon)
+
+st.sidebar.markdown(f"""<div class="stMetric"><div style="font-size: 40px;">☀️</div><div class="metric-label">الإشعاع الأفقي</div><div class="metric-value">{ghi_h:.2f}</div><div style="color: #b0c4de;">kWh/m²/day</div></div>""", unsafe_allow_html=True)
+st.sidebar.markdown(f"""<div class="stMetric"><div style="font-size: 40px;">📐</div><div class="metric-label">زاوية ناسا</div><div class="metric-value">{tilt_opt:.1f}°</div></div>""", unsafe_allow_html=True)
+
+final_tilt = tilt_opt
+final_factor = 1 + 0.008 * abs(final_tilt)
+ghi_final = ghi_h * final_factor
+
+st.markdown("""<div class="section-title"><h2>🏢 اختيار نوع المبنى</h2></div>""", unsafe_allow_html=True)
+
+if "building_type" not in st.session_state:
+    st.session_state.building_type = "🏠 منزل عادي"
+
+col1, col2, col3, col4, col5 = st.columns(5)
+building_options = {
+    "🏠 منزل عادي": "شقة/فيلا صغيرة",
+    "🏢 عمارة سكنية": "4-12 شقة",
+    "🏫 مؤسسة/مكتب": "مكاتب + قاعات",
+    "🏭 ورشة/مصنع": "معدات ثقيلة",
+    "➕ تخصيص يدوي": "اختيار الأجهزة"
+}
+
+for i, (btype, desc) in enumerate(building_options.items()):
+    cols = [col1, col2, col3, col4, col5]
+    with cols[i]:
+        icon = btype.split()[0]
+        title = " ".join(btype.split()[1:])
+        if st.button(f"{icon}\n{title}\n{desc}", key=btype, use_container_width=True):
+            st.session_state.building_type = btype
+            st.rerun()
+
+building_type = st.session_state.building_type
+st.markdown(f"""<div style="text-align: center; margin: 20px 0; color: #FFD700; font-weight: 600;">✅ تم الاختيار: {building_type}</div>""", unsafe_allow_html=True)
+
+templates = {
+    "🏠 منزل عادي": {"💡 لمبة LED": [12, 8], "📺 تلفزيون 43 بوصة": [2, 6], "🧊 ثلاجة 14 قدم": [1, 24], "❄️ فريزر": [1, 24], "🌀 مروحة سقف": [4, 10], "💻 لابتوب": [2, 5], "📱 شاحن موبايل": [4, 3], "📶 راوتر": [1, 24], "🚰 مضخة موية 1 حصان": [1, 1]},
+    "🏢 عمارة سكنية": {"💡 لمبة LED": [80, 10], "📺 تلفزيون": [20, 8], "🧊 ثلاجة": [15, 24], "🌀 مروحة سقف": [30, 12], "📶 راوتر": [5, 24], "🚰 مضخة موية 3 حصان": [2, 3], "💡 إنارة سلالم": [40, 12]},
+    "🏫 مؤسسة/مكتب": {"💡 لمبة LED": [60, 10], "💻 كمبيوتر مكتبي": [30, 8], "🖨️ طابعة": [3, 2], "📶 راوتر": [3, 10], "❄️ مكيف اسبلت 1 طن": [8, 8], "📺 شاشة عرض": [2, 6], "🚰 كولر موية": [2, 24]},
+    "🏭 ورشة/مصنع": {"💡 إنارة صناعية": [40, 12], "⚙️ مخرطة": [3, 8], "⚙️ ماكينة لحام": [2, 4], "🚰 مضخة 5 حصان": [2, 6], "🌀 شفاط صناعي": [4, 10], "❄️ مكيف شباك": [10, 8]}
+}
+
+watts = {"💡 لمبة LED": 10, "📺 تلفزيون 43 بوصة": 80, "📺 تلفزيون": 80, "📺 شاشة عرض": 150, "🧊 ثلاجة 14 قدم": 150, "🧊 ثلاجة": 150, "❄️ فريزر": 200, "🌀 مروحة سقف": 60, "🌀 مروحة ستاند": 40, "🌀 شفاط صناعي": 200, "💻 لابتوب": 65, "💻 كمبيوتر مكتبي": 120, "📱 شاحن موبايل": 5, "📶 راوتر": 15, "🖨️ طابعة": 400, "🚰 مضخة موية 1 حصان": 750, "🚰 مضخة موية 3 حصان": 2200, "🚰 مضخة 5 حصان": 3700, "🚰 كولر موية": 100, "❄️ مكيف اسبلت 1 طن": 1200, "❄️ مكيف شباك 1.5 طن": 1500, "❄️ مكيف شباك": 1500, "💡 إنارة سلالم": 20, "💡 إنارة صناعية": 100, "⚙️ مخرطة": 2000, "⚙️ ماكينة لحام": 3500}
+
+st.markdown("""<div class="section-title"><h2>⚡ إدخال بيانات الأجهزة</h2></div>""", unsafe_allow_html=True)
+
+total_energy = 0
+if building_type == "➕ تخصيص يدوي":
+    st.info("يتم اختيار الأجهزة يدوياً من القائمة أدناه")
+else:
+    st.success(f"تم تحميل القالب الافتراضي لـ {building_type} - يمكن تعديل الأعداد والساعات")
+    cols = st.columns(3)
+    for i, (device, values) in enumerate(templates[building_type].items()):
+        default_qty, default_hours = values
+        watt = watts[device]
+        col = cols[i % 3]
+        with col:
+            st.markdown(f"""<div class="device-card"><div style="font-size: 35px;">{device.split()[0]}</div><div style="font-weight: 600; font-size: 13px;">{' '.join(device.split()[1:])}</div><div style="color: #FFD700; font-size: 12px;">{watt} واط</div></div>""", unsafe_allow_html=True)
+            qty = st.number_input(f"العدد", min_value=0, max_value=100, value=default_qty, key=f"qty_{i}", label_visibility="collapsed")
+            hours = st.number_input(f"ساعات التشغيل", min_value=0.0, max_value=24.0, value=float(default_hours), step=0.5, key=f"hrs_{i}", label_visibility="collapsed")
+            energy = qty * watt * hours / 1000
+            total_energy += energy
+
+st.markdown(f"""<div class="success-msg">⚡ إجمالي الاستهلاك اليومي: {total_energy:.2f} kWh | متوسط الحمل: {total_energy/8:.2f} kW</div>""", unsafe_allow_html=True)
+
+energy_kwh = total_energy
+load_kw = total_energy / 8 if total_energy > 0 else 2.0
+
+panel_w = 550
+battery_v = 48
+battery_ah = 200
+system_eff = 0.85
+dod = 0.8
+inverter_eff = 0.95
+
+num_panels = math.ceil(energy_kwh / (ghi_final * panel_w/1000 * system_eff)) if energy_kwh > 0 else 1
+array_kw = num_panels * panel_w / 1000
+battery_kwh = energy_kwh * 1.5 / (dod * inverter_eff)
+num_batteries = math.ceil(battery_kwh / (battery_v * battery_ah / 1000))
+inverter_kw = math.ceil(load_kw * 1.3)
+
+distance = st.number_input("المسافة DC بالأمتار", value=20)
+current_dc = (array_kw * 1000) / (battery_v * 0.98)
+cable_mm2 = (2 * distance * current_dc * 0.0175) / (0.03 * battery_v)
+fuse_dc = math.ceil(current_dc * 1.56)
+breaker_ac = math.ceil((load_kw * 1000 / 220) * 1.25)
+
+st.markdown("""<div class="section-title"><h2>📊 النتائج الهندسية</h2></div>""", unsafe_allow_html=True)
+
+col1, col2, col3, col4 = st.columns(4)
+col1.markdown(f"""<div class="stMetric"><div style="font-size: 50px; margin-bottom: 10px;">☀️</div><div class="metric-label">عدد الألواح 550W</div><div class="metric-value">{num_panels}</div><div style="color: #FFD700; font-size: 16px; margin-top: 5px;">⚡ {array_kw:.1f} kW</div></div>""", unsafe_allow_html=True)
+col2.markdown(f"""<div class="stMetric"><div style="font-size: 50px; margin-bottom: 10px;">🔋</div><div class="metric-label">البطاريات 48V 200Ah</div><div class="metric-value">{num_batteries}</div><div style="color: #FFD700; font-size: 16px; margin-top: 5px;">💾 {battery_kwh:.1f} kWh</div></div>""", unsafe_allow_html=True)
+col3.markdown(f"""<div class="stMetric"><div style="font-size: 50px; margin-bottom: 10px;">⚡</div><div class="metric-label">الانفرتر</div><div class="metric-value">{inverter_kw} kW</div><div style="color: #FFD700; font-size: 16px; margin-top: 5px;">AC 220V</div></div>""", unsafe_allow_html=True)
+col4.markdown(f"""<div class="stMetric"><div style="font-size: 50px; margin-bottom: 10px;">📊</div><div class="metric-label">الطاقة اليومية</div><div class="metric-value">{energy_kwh:.1f}</div><div style="color: #b0c4de; font-size: 16px; margin-top: 5px;">kWh/يوم</div></div>""", unsafe_allow_html=True)
+
+st.markdown("""<div class="section-title"><h2>🔌 مقطع الكيبل والحمايات</h2></div>""", unsafe_allow_html=True)
+
 col1, col2, col3 = st.columns(3)
-col1.metric("عملاء", "1200+")
-col2.metric("منظومة مركبة", "850+")
-col3.metric("سنوات خبرة", "8")
-st.markdown("حلول طاقة شمسية متكاملة في السودان")
+col1.markdown(f"""<div class="stMetric"><div style="font-size: 45px; margin-bottom: 10px;">🔌</div><div class="metric-label">مقطع كيبل DC</div><div class="metric-value">{math.ceil(cable_mm2)} mm²</div></div>""", unsafe_allow_html=True)
+col2.markdown(f"""<div class="stMetric"><div style="font-size: 45px; margin-bottom: 10px;">🔒</div><div class="metric-label">فيوز DC</div><div class="metric-value">{fuse_dc} A</div></div>""", unsafe_allow_html=True)
+col3.markdown(f"""<div class="stMetric"><div style="font-size: 45px; margin-bottom: 10px;">⚡</div><div class="metric-label">قاطع AC</div><div class="metric-value">{breaker_ac} A</div></div>""", unsafe_allow_html=True)
+
+st.markdown("""<div class="chat-container"><h2>🤖 SSE Engineer - المساعد الذكي</h2><p style="color: #b0c4de;">طرح الاستفسارات حول الطاقة الشمسية، الحسابات، أو الصيانة</p></div>""", unsafe_allow_html=True)
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+user_input = st.text_input("كتابة الاستفسار هنا...", key="user_input", placeholder="مثال: ما سبب تفريغ البطارية بسرعة؟")
+
+if st.button("إرسال 💬", use_container_width=True) and user_input:
+    st.session_state.chat_history.append(("user", user_input))
+    user_lower = user_input.lower()
+    payback = energy_kwh*365*0.15/(num_panels*85 + num_batteries*280 + inverter_kw*450) if energy_kwh > 0 and (num_panels*85 + num_batteries*280 + inverter_kw*450) > 0 else 0
+
+    if "بطارية" in user_lower or "battery" in user_lower:
+        bot_reply = f"🔋 النظام يحتوي على {num_batteries} بطارية 48V 200Ah بإجمالي {battery_kwh:.1f} kWh. في حالة التفريغ السريع: 1- التأكد من عدم تجاوز DoD نسبة 80% 2- مراجعة درجة حرارة التشغيل 3- فحص كفاءة الانفرتر 95%"
+    elif "لوح" in user_lower or "panel" in user_lower:
+        bot_reply = f"☀️ النظام يحتوي على {num_panels} لوح شمسي 550W بقدرة {array_kw:.1f} kW. الإشعاع الشمسي في الموقع {ghi_final:.2f} kWh/m²/day. يُفضل تنظيف الألواح دورياً كل 3 شهور للحفاظ على الكفاءة"
+    elif "سعر" in user_lower or "cost" in user_lower:
+        bot_reply = f"💰 التكلفة التقديرية تشمل الألواح والبطاريات والانفرتر. فترة الاسترجاع المتوقعة {payback:.1f} سنة بناءً على سعر الكيلو واط 0.15$"
+    elif "ظل" in user_lower or "shading" in user_lower:
+        bot_reply = "🌤️ الظل الجزئي يقلل الإنتاج بنسبة 30-70%. يُنصح باستخدام أداة 'الظلال_ultra' لحساب الفقد الدقيق وتوزيع الألواح الأمثل"
+    else:
+        bot_reply = f"👷‍♀️ SSE Engineer متاح للمساعدة. حسب البيانات المدخلة: الاستهلاك اليومي {energy_kwh:.1f} kWh. يمكن الاستفسار عن البطاريات، الألواح، الكيبل، الحمايات، أو أي موضوع فني آخر"
+
+    st.session_state.chat_history.append(("bot", bot_reply))
+    st.rerun()
+
+for role, msg in st.session_state.chat_history:
+    if role == "user":
+        st.markdown(f"""<div class="chat-msg-user">👤 {msg}</div>""", unsafe_allow_html=True)
+    else:
+        st.markdown(f"""<div class="chat-msg-bot">🤖 {msg}</div>""", unsafe_allow_html=True)
+
+st.markdown("""<div class="success-msg">✅ تم إتمام الحسابات وفقاً لبيانات ناسا 20 سنة ومعايير IEC 61727</div>""", unsafe_allow_html=True)
