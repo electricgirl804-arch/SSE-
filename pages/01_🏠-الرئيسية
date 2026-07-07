@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import requests
-import streamlit.components.v1 as components
 import math
+from streamlit_js_eval import streamlit_js_eval
 
 st.set_page_config(page_title="SSE Smart Solar Platform", page_icon="logo.png", layout="wide")
 
-# CSS عام RTL + تصميم
+# CSS عام RTL + تصميم احترافي
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
@@ -27,35 +26,53 @@ col1, col2 = st.columns([1, 5])
 with col1:
     st.image("logo.png", width=120)
 with col2:
-    st.markdown('<div class="header-text"><h1>⚡ SSE Smart Solar Platform</h1><p>منصة المهندسة شهد | تصميم أنظمة الطاقة الشمسية الذكية v2.0</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header-text"><h1>⚡ SSE Smart Solar Platform</h1><p>منصة المهندسة شهد | تصميم أنظمة الطاقة الشمسية الذكية v2.1</p></div>', unsafe_allow_html=True)
 
 st.divider()
 
-# قسم الموقع وزاوية الميلان
-st.markdown("<h2>🌍 بيانات الموقع والحسابات الأولية</h2>", unsafe_allow_html=True)
+# 1. تحديد الموقع GPS
+st.markdown("<h2>🌍 بيانات الموقع الجغرافي</h2>", unsafe_allow_html=True)
 
+col1, col2 = st.columns([1, 3])
+with col1:
+    get_loc = st.button("📍 تحديد موقعي تلقائياً GPS", use_container_width=True, type="primary")
+with col2:
+    st.caption("اضغطي الزر ووافقي على إذن الموقع من المتصفح")
+
+# متغيرات الجلسة
+if 'latitude' not in st.session_state:
+    st.session_state.latitude = 15.65
+if 'longitude' not in st.session_state:
+    st.session_state.longitude = 32.48
+
+# كود JS يجيب GPS
+if get_loc:
+    js_code = """
+    new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+            (position) => resolve({lat: position.coords.latitude, lon: position.coords.longitude, accuracy: position.coords.accuracy}),
+            (error) => reject(error.message)
+        );
+    });
+    """
+    location = streamlit_js_eval(js_code=js_code, key='gps')
+    if location and 'lat' in location:
+        st.session_state.latitude = location['lat']
+        st.session_state.longitude = location['lon']
+        st.success(f"تم تحديد الموقع! الدقة: ±{location['accuracy']:.0f} متر")
+    elif location:
+        st.warning(f"تعذر تحديد الموقع: {location}")
+
+# 2. إدخال يدوي كخيار احتياطي
 col1, col2, col3 = st.columns(3)
 with col1:
-    city = st.selectbox("اختيار المدينة", ["أم درمان", "الخرطوم", "بورتسودان", "عطبرة", "دنقلا", "واد مدني", "مخصص"])
+    latitude = st.number_input("خط العرض Latitude", value=float(st.session_state.latitude), format="%.6f")
 with col2:
-    season = st.selectbox("نمط التركيب", ["سنوي ثابت", "أقصى إنتاج صيفي", "أقصى إنتاج شتوي"])
+    longitude = st.number_input("خط الطول Longitude", value=float(st.session_state.longitude), format="%.6f")
 with col3:
-    custom_lat = st.number_input("خط العرض يدوي", value=15.65, format="%.2f", disabled=(city!= "مخصص"))
+    season = st.selectbox("نمط التركيب", ["سنوي ثابت", "أقصى إنتاج صيفي", "أقصى إنتاج شتوي"])
 
-# خطوط العرض
-latitudes = {
-    "أم درمان": 15.65,
-    "الخرطوم": 15.50,
-    "بورتسودان": 19.62,
-    "عطبرة": 17.71,
-    "دنقلا": 19.17,
-    "واد مدني": 14.40,
-    "مخصص": custom_lat
-}
-
-latitude = latitudes[city]
-
-# حساب زاوية الميلان المثلى
+# 3. حساب زاوية الميلان Tilt
 if season == "سنوي ثابت":
     tilt = latitude
 elif season == "أقصى إنتاج صيفي":
@@ -63,41 +80,61 @@ elif season == "أقصى إنتاج صيفي":
 else:
     tilt = latitude + 15
 
-# معامل تصحيح الإشعاع
 tilt_factor = math.cos(math.radians(tilt - latitude)) * 0.98 + 0.02
-base_irradiance = 5.8 if city in ["أم درمان", "الخرطوم"] else 6.2 if city == "بورتسودان" else 6.0
+base_irradiance = 5.8 + (latitude - 15.5) * 0.1
 irradiance = base_irradiance * tilt_factor
 
-# عرض النتائج
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("خط العرض", f"{latitude:.2f}°")
-col2.metric("زاوية الميلان المثلى", f"{tilt:.1f}°")
-col3.metric("الإشعاع الأساسي", f"{base_irradiance:.1f} kWh/m²/day")
-col4.metric("الإشعاع الفعلي بعد الميلان", f"{irradiance:.2f} kWh/m²/day")
+# 4. اتجاه التركيب Azimuth
+st.markdown("<h3>🧭 اتجاه تركيب الألواح</h3>", unsafe_allow_html=True)
+azimuth = st.slider("اتجاه اللوح: 0° شمال | 90° شرق | 180° جنوب | 270° غرب", min_value=0, max_value=360, value=180, step=5)
 
-st.info(f"يُفضل تركيب الألواح بزاوية {tilt:.1f}° باتجاه الجنوب لضمان أقصى إنتاج سنوي في {city}")
+if azimuth == 180:
+    st.success("✅ اتجاه مثالي - جنوب حقيقي")
+    azimuth_loss = 1.0
+elif 165 <= azimuth <= 195:
+    st.info("🟢 ممتاز ±15° - فقد 2%")
+    azimuth_loss = 0.98
+elif 135 <= azimuth <= 225:
+    st.warning("🟡 مقبول ±45° - فقد 10%")
+    azimuth_loss = 0.90
+else:
+    st.error("🔴 فقد كبير >45° - فقد 20%")
+    azimuth_loss = 0.80
+
+# 5. الإشعاع النهائي
+final_irradiance = irradiance * azimuth_loss
+
+st.divider()
+col1, col2, col3, col4, col5 = st.columns(5)
+col1.metric("خط العرض", f"{latitude:.4f}°")
+col2.metric("خط الطول", f"{longitude:.4f}°")
+col3.metric("زاوية الميلان", f"{tilt:.1f}°")
+col4.metric("اتجاه اللوح", f"{azimuth}°")
+col5.metric("الإشعاع النهائي", f"{final_irradiance:.2f} kWh/m²/day")
+
+st.info(f"التوصية: تركيب الألواح بزاوية {tilt:.1f}° واتجاه {azimuth}° جنوب لضمان أقصى إنتاج")
 
 st.divider()
 
-# أزرار التنقل للصفحات
+# أزرار التنقل
 st.markdown("<h2>📊 خدمات المنصة</h2>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("### 1. محاكي الأحمال")
-    st.write("حساب الاستهلاك اليومي والشهري وتحديد حجم النظام")
+    st.write("حساب الاستهلاك وتحديد حجم النظام")
     if st.button("الدخول للمحاكي", key="load", use_container_width=True):
         st.switch_page("03_⚡_المحاكي.py")
 
 with col2:
     st.markdown("### 2. حساب الظلال")
-    st.write("تحليل التظليل وتأثيره على الإنتاج")
+    st.write("تحليل التظليل وتأثيره")
     if st.button("الدخول لحساب الظلال", key="shadow", use_container_width=True):
         st.switch_page("04_الظلال_ultra.py")
 
 with col3:
     st.markdown("### 3. مقطع الكيبل")
-    st.write("حساب مقطع الكيبل المناسب وهبوط الجهد")
+    st.write("حساب مقطع الكيبل وهبوط الجهد")
     if st.button("الدخول لحساب الكيبل", key="cable", use_container_width=True):
         st.switch_page("05_الكيبل.py")
 
@@ -113,9 +150,11 @@ with col6:
         st.switch_page("10_التكلفة.py")
 
 st.divider()
-st.caption("تم التطوير بواسطة المهندسة شهد | SSE v2.0 | جميع الحسابات حسب معايير IEC 61727")
+st.caption("SSE v2.1 | جميع الحسابات حسب IEC 61727 | الموقع والميلان والاتجاه مربوطة تلقائياً")
 
 # حفظ القيم للصفحات التانية
 st.session_state.latitude = latitude
+st.session_state.longitude = longitude
 st.session_state.tilt = tilt
-st.session_state.irradiance = irradiance
+st.session_state.azimuth = azimuth
+st.session_state.irradiance = final_irradiance
