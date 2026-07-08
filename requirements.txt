@@ -11,3 +11,5 @@ openpyxl
 pvlib
 pvfactors
 scikit-learn
+folium
+streamlit-folium
