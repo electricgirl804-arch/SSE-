@@ -4,6 +4,23 @@ import google.generativeai as genai
 
 st.set_page_config(page_title="الأعطال 06", page_icon="⚡", layout="wide")
 
+# === دا البخلي الكلام يمين ===
+st.markdown("""
+<style>
+    html, body, [class*="css"] {
+        direction: rtl;
+        text-align: right;
+    }
+    h1 {
+        text-align: center!important;
+        color: #FFD700!important;
+    }
+   .stTabs [data-baseweb="tab-list"] {
+        justify-content: flex-start;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # === 1. نقرا ملف products.json ===
 @st.cache_data
 def load_products():
@@ -108,10 +125,10 @@ if st.session_state.role == "مهندس":
     with tab3:
         st.markdown("""
         <style>
-    .product-card {background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid #FFD700; margin-bottom: 20px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;}
-    .product-title {color: #1e3c72; font-weight: 800; font-size: 18px; margin-bottom: 10px;}
-    .product-price {color: #FF8C00; font-weight: 700; font-size: 22px;}
-    .stButton>button {background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border-radius: 10px; font-weight: 700; border: none; width: 100%;}
+   .product-card {background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid #FFD700; margin-bottom: 20px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;}
+   .product-title {color: #1e3c72; font-weight: 800; font-size: 18px; margin-bottom: 10px;}
+   .product-price {color: #FF8C00; font-weight: 700; font-size: 22px;}
+   .stButton>button {background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border-radius: 10px; font-weight: 700; border: none; width: 100%;}
         </style>
         """, unsafe_allow_html=True)
 
@@ -169,7 +186,6 @@ if st.session_state.role == "مهندس":
                         st.session_state.cart.pop(i); st.rerun()
                     total_cart += item['price'] * qty
             st.markdown("---")
-            # === هنا التعديل المهم ===
             st.success(f"**الاجمالي الكلي: {total_cart}$**")
             with st.form("order_form"):
                 name = st.text_input("اسمك")
