@@ -1,83 +1,17 @@
 {
   "panels": [
-    {
-      "brand": "Jinko",
-      "watt": 550,
-      "price": 85,
-      "imp": 13.5,
-      "vmp": 41.0,
-      "voc": 49.8,
-      "datasheet": "https://www.jinkosolar.com/uploads/JKM550M-7RL4-V_Data.pdf"
-    },
-    {
-      "brand": "Trina",
-      "watt": 545,
-      "price": 82,
-      "imp": 13.3,
-      "vmp": 41.1,
-      "voc": 49.9,
-      "datasheet": "https://static.trinasolar.com/sites/default/files/Trina_Solar_Datasheet_Vertex_S_DE09R.08_2023_A_EN.pdf"
-    },
-    {
-      "brand": "JA Solar",
-      "watt": 555,
-      "price": 88,
-      "imp": 13.6,
-      "vmp": 40.8,
-      "voc": 49.5,
-      "datasheet": "https://www.jasolar.com/uploadfile/2023/0626/JA_Solar_JAM72S30-555-MR_Datasheet.pdf"
-    }
+    {"brand": "Jinko", "watt": 550, "price": 180, "voc": 49.8, "vmp": 41.9, "datasheet": "https://link"},
+    {"brand": "Canadian", "watt": 550, "price": 175, "voc": 49.5, "vmp": 41.6, "datasheet": "https://link"},
+    {"brand": "Trina", "watt": 545, "price": 170, "voc": 49.0, "vmp": 41.2, "datasheet": "https://link"}
   ],
   "inverters": [
-    {
-      "brand": "Growatt",
-      "kw": 5,
-      "price": 650,
-      "max_pv_volt": 500,
-      "mppt": 2,
-      "datasheet": "https://en.growatt.com/upload/file/SPH%20UP%20datasheet.pdf"
-    },
-    {
-      "brand": "Deye",
-      "kw": 5,
-      "price": 720,
-      "max_pv_volt": 500,
-      "mppt": 2,
-      "datasheet": "https://www.deye.com.cn/wp-content/uploads/2023/05/SUN-5K-SG03LP1-EU.pdf"
-    },
-    {
-      "brand": "Solis",
-      "kw": 6,
-      "price": 780,
-      "max_pv_volt": 600,
-      "mppt": 2,
-      "datasheet": "https://www.solisinverters.com/global/upload/20230104/S6-EO1P(3.6-6)K-H-EU.pdf"
-    }
+    {"brand": "Growatt", "kw": 3, "price": 450, "max_pv_volt": 450, "mppt": 2, "datasheet": "https://link"},
+    {"brand": "Must", "kw": 5, "price": 650, "max_pv_volt": 500, "mppt": 2, "datasheet": "https://link"},
+    {"brand": "Solis", "kw": 8, "price": 950, "max_pv_volt": 550, "mppt": 2, "datasheet": "https://link"}
   ],
   "batteries": [
-    {
-      "brand": "Felicity",
-      "ah": 200,
-      "voltage": 48,
-      "price": 950,
-      "cycle": 6000,
-      "datasheet": "https://felicitysolar.com/wp-content/uploads/2023/05/LPBF48200-48V200Ah.pdf"
-    },
-    {
-      "brand": "Narada",
-      "ah": 200,
-      "voltage": 48,
-      "price": 980,
-      "cycle": 8000,
-      "datasheet": "https://www.naradapower.com/Uploads/Files/2023/09/11/20230911142350_1747.pdf"
-    },
-    {
-      "brand": "Pylontech",
-      "ah": 100,
-      "voltage": 48,
-      "price": 850,
-      "cycle": 6000,
-      "datasheet": "https://www.pylontech.com.cn/service/download/US5000%20Datasheet.pdf"
-    }
+    {"brand": "Ritar", "ah": 200, "price": 380, "voltage": 12, "cycle": 6000, "datasheet": "https://link"},
+    {"brand": "Trojan", "ah": 220, "price": 420, "voltage": 12, "cycle": 5000, "datasheet": "https://link"},
+    {"brand": "Narada", "ah": 100, "price": 250, "voltage": 12, "cycle": 4000, "datasheet": "https://link"}
   ]
 }
