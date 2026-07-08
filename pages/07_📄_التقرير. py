@@ -3,17 +3,22 @@ import pandas as pd
 from datetime import datetime
 from io import BytesIO
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 
 st.set_page_config(page_title="تقرير SSE", layout="wide")
 st.title("📄 عرض سعر - SSE Smart Solar")
+st.caption("تم التطوير بواسطة المهندسة شهد | SSE v2.0")
 
+# ===== التحقق من وجود بيانات =====
 if 'num_panels' not in st.session_state:
-    st.error("لا توجد بيانات محسوبة")
+    st.error("❌ لا توجد بيانات محسوبة")
     st.warning("ارجع للصفحة الرئيسية واحسب الأحمال أولاً")
     st.stop()
 
-st.success("تم تحميل البيانات بنجاح")
+st.success("✅ تم تحميل البيانات بنجاح")
 
+st.divider()
+# ===== 1. بيانات العميل =====
 st.header("1. بيانات العميل والمشروع")
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -24,6 +29,7 @@ with col3:
     project_date = st.date_input("تاريخ العرض", datetime.now())
 
 st.divider()
+# ===== 2. ملخص النظام =====
 st.header("2. ملخص النظام المقترح")
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("عدد الألواح", f"{st.session_state.num_panels} لوح", "550W Mono PERC")
@@ -32,11 +38,16 @@ col3.metric("قدرة الانفرتر", f"{st.session_state.inverter_kw} kW", "
 col4.metric("الطاقة اليومية", f"{st.session_state.energy_kwh:.1f} kWh")
 
 st.divider()
+# ===== 3. جدول الاسعار =====
 st.header("3. جدول الكميات والأسعار التقديرية")
 
-price_panel = st.number_input("سعر اللوح 550W بالدولار", value=85)
-price_battery = st.number_input("سعر البطارية 48V بالدولار", value=280)
-price_inverter = st.number_input("سعر الانفرتر بالدولار", value=450)
+col1, col2, col3 = st.columns(3)
+with col1:
+    price_panel = st.number_input("سعر اللوح 550W بالدولار", value=85, min_value=0)
+with col2:
+    price_battery = st.number_input("سعر البطارية 48V بالدولار", value=280, min_value=0)
+with col3:
+    price_inverter = st.number_input("سعر الانفرتر بالدولار", value=450, min_value=0)
 
 data = {
     "م": [1, 2, 3, 4, 5],
@@ -59,8 +70,8 @@ data = {
         st.session_state.num_panels * price_panel,
         st.session_state.num_batteries * price_battery,
         st.session_state.inverter_kw * price_inverter,
-        st.session_state.num_panels * 12,
-        st.session_state.num_panels * 15
+        st.session_state.num_panels * 12,  # سعر الكيبلات
+        st.session_state.num_panels * 15   # سعر التركيب
     ]
 }
 
@@ -70,55 +81,107 @@ total = df["الإجمالي $"].sum()
 st.metric("الإجمالي الكلي التقديري شامل التركيب", f"${total:,.0f}")
 
 st.divider()
+# ===== 4. المواصفات الفنية =====
 st.header("4. المواصفات الفنية والحسابات الهندسية")
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("الموقع والإشعاع الشمسي")
-    st.write(f"خط العرض: {st.session_state.lat:.4f}°")
-    st.write(f"الإشعاع GHI: {st.session_state.ghi_final:.2f} kWh/m²/day")
-    st.write(f"زاوية الميل: {st.session_state.final_tilt:.1f}°")
+    st.write(f"**خط العرض:** {st.session_state.lat:.4f}°")
+    st.write(f"**الإشعاع GHI:** {st.session_state.ghi_final:.2f} kWh/m²/day")
+    st.write(f"**زاوية الميل:** {st.session_state.final_tilt:.1f}°")
 
 with col2:
     st.subheader("الحمايات والكيبل حسب IEC")
-    st.write(f"مقطع كيبل DC: {int(st.session_state.cable_mm2)} mm² نحاس")
-    st.write(f"قيمة الفيوز DC: {int(st.session_state.fuse_dc)} A")
-    st.write(f"قيمة القاطع AC: {int(st.session_state.breaker_ac)} A")
-    st.write(f"فترة الاسترجاع: {st.session_state.payback:.1f} سنة")
+    st.write(f"**مقطع كيبل DC:** {int(st.session_state.cable_mm2)} mm² نحاس")
+    st.write(f"**قيمة الفيوز DC:** {int(st.session_state.fuse_dc)} A")
+    st.write(f"**قيمة القاطع AC:** {int(st.session_state.breaker_ac)} A")
+    st.write(f"**فترة الاسترجاع:** {st.session_state.payback:.1f} سنة")
 
 st.divider()
+# ===== 5. انشاء PDF =====
 st.header("5. تحرير التقرير وحفظه")
 
 report_text = f"""عرض سعر - SSE Smart Solar
 
-بيانات العميل: {client_name}
+بيانات العميل
+
+الاسم: {client_name}
 رقم الهاتف: {client_phone}
 تاريخ العرض: {project_date}
 
-ملخص النظام:
+ملخص النظام المقترح
+
 - عدد الألواح: {st.session_state.num_panels} لوح 550W Mono PERC
 - عدد البطاريات: {st.session_state.num_batteries} بطارية 48V 200Ah LiFePO4
 - قدرة الانفرتر: {st.session_state.inverter_kw} kW هجين MPPT
-- الطاقة اليومية: {st.session_state.energy_kwh:.1f} kWh
+- الطاقة اليومية المتوقعة: {st.session_state.energy_kwh:.1f} kWh
 
-جدول الأسعار التقديرية بالدولار:
+جدول الأسعار التقديرية بالدولار
+
 {df.to_string(index=False)}
 
 الإجمالي الكلي: ${total:,.0f}
 
-المواصفات الفنية:
-- خط العرض: {st.session_state.lat:.4f}°
-- الإشعاع GHI: {st.session_state.ghi_final:.2f} kWh/m²/day
-- زاوية الميل: {st.session_state.final_tilt:.1f}°
-- مقطع كيبل DC: {int(st.session_state.cable_mm2)} mm²
-- قيمة الفيوز: {int(st.session_state.fuse_dc)} A
-- قيمة القاطع: {int(st.session_state.breaker_ac)} A
-- فترة الاسترجاع: {st.session_state.payback:.1f} سنة
+المواصفات الفنية
 
-ملاحظات:
-الأسعار تقديرية وقابلة للتعديل حسب السوق
-يشمل العرض التركيب والضمان حسب المواصفات
-مدة التنفيذ تحدد بعد معاينة الموقع
+- خط العرض: {st.session_state.lat:.4f}°
+- الإشعاع الشمسي GHI: {st.session_state.ghi_final:.2f} kWh/m²/day
+- زاوية الميل المثلى: {st.session_state.final_tilt:.1f}°
+- مقطع كيبل DC: {int(st.session_state.cable_mm2)} mm² نحاس
+- قيمة الفيوز DC: {int(st.session_state.fuse_dc)} A
+- قيمة القاطع AC: {int(st.session_state.breaker_ac)} A
+- فترة الاسترجاع المتوقعة: {st.session_state.payback:.1f} سنة
+
+الشروط والملاحظات
+
+1. الأسعار تقديرية وقابلة للتعديل حسب السوق
+2. يشمل العرض التركيب والبرمجة والتشغيل
+3. فترة الضمان: الألواح 25 سنة، البطاريات 5 سنوات، الانفرتر 5 سنوات
+4. مدة التنفيذ تحدد بعد معاينة الموقع
+5. الدفعة الأولى 50% عند توقيع العقد
+
 شركة SSE للطاقة الشمسية
+الدعم الفني: 0110560222
 """
 
-edited_report = st.text_area("ت
+edited_report = st.text_area("تحرير النص قبل التصدير", report_text, height=400)
+
+# دالة انشاء PDF
+def create_pdf(text):
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    y = height - 50
+    
+    p.setFont("Helvetica", 9)
+    for line in text.split('\n'):
+        if y < 50:
+            p.showPage()
+            p.setFont("Helvetica", 9)
+            y = height - 50
+        p.drawString(40, y, line)
+        y -= 14
+    
+    p.save()
+    buffer.seek(0)
+    return buffer
+
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("📥 انشاء التقرير PDF", use_container_width=True, type="primary"):
+        pdf_buffer = create_pdf(edited_report)
+        st.session_state.pdf_file = pdf_buffer
+        st.success("تم انشاء التقرير بنجاح ✅")
+
+with col2:
+    if 'pdf_file' in st.session_state:
+        st.download_button(
+            label="⬇️ تحميل الملف",
+            data=st.session_state.pdf_file,
+            file_name=f"عرض_سعر_SSE_{client_name}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+
+st.divider()
+st.caption("شركة SSE للطاقة الشمسية | الدعم الفني: 0110560222")
