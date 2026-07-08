@@ -2,21 +2,36 @@ import streamlit as st, sqlite3, requests, math, datetime, json
 import streamlit.components.v1 as components
 import google.generativeai as genai
 
-st.set_page_config(page_title="الأعطال 06", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="الأعطال 06", page_icon="⚡", layout="wide", initial_sidebar_state="collapsed")
 
-# === دا البخلي الكلام يمين ===
+# === دا البقفل زر الصفحات ويظبط اليمين ===
 st.markdown("""
 <style>
-    html, body, [class*="css"] {
+    /* 1. نقفل الشريط الجانبي وزر ≡ نهائي */
+    [data-testid="stSidebar"] {display: none;}
+    [data-testid="collapsedControl"] {display: none;}
+
+    /* 2. نخلي كل شي يمين عشان العربي */
+    html, body,.main {
         direction: rtl;
         text-align: right;
     }
+
+    /* 3. نظبط التابات ما تتداخل في الجوال */
+   .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+   .stTabs [data-baseweb="tab"] {
+        flex-shrink: 0;
+    }
+
+    /* 4. نظبط العنوان */
     h1 {
         text-align: center!important;
         color: #FFD700!important;
-    }
-   .stTabs [data-baseweb="tab-list"] {
-        justify-content: flex-start;
+        font-size: 28px!important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -52,7 +67,7 @@ conn.commit()
 if 'role' not in st.session_state: st.session_state.role = None
 
 if st.session_state.role == None:
-    st.markdown("<h1 style='text-align:center; color:#FFD700;'>⚡ الأعطال 06 | المهندسة شهد</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>⚡ الأعطال 06 | المهندسة شهد</h1>", unsafe_allow_html=True)
     role = st.radio("اختار نوع الدخول", ["ادمن", "مهندس"], horizontal=True)
 
     if role == "ادمن":
@@ -125,10 +140,10 @@ if st.session_state.role == "مهندس":
     with tab3:
         st.markdown("""
         <style>
-   .product-card {background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid #FFD700; margin-bottom: 20px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;}
-   .product-title {color: #1e3c72; font-weight: 800; font-size: 18px; margin-bottom: 10px;}
-   .product-price {color: #FF8C00; font-weight: 700; font-size: 22px;}
-   .stButton>button {background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border-radius: 10px; font-weight: 700; border: none; width: 100%;}
+  .product-card {background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid #FFD700; margin-bottom: 20px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;}
+  .product-title {color: #1e3c72; font-weight: 800; font-size: 18px; margin-bottom: 10px;}
+  .product-price {color: #FF8C00; font-weight: 700; font-size: 22px;}
+  .stButton>button {background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border-radius: 10px; font-weight: 700; border: none; width: 100%;}
         </style>
         """, unsafe_allow_html=True)
 
