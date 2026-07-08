@@ -1,122 +1,20 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import math
-from streamlit_js_eval import streamlit_js_eval
-import google.generativeai as genai
 
-st.set_page_config(page_title="SSE Smart Solar Platform", page_icon="logo.png", layout="wide")
+st.set_page_config(page_title="الرئيسية", page_icon="🏠", layout="wide")
 
-# ==== تفعيل AI بأمان عشان ما يقع ====
-try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    AI_ENABLED = True
-except:
-    AI_ENABLED = False
+st.title("⚡ الأعطال 06 | المهندسة شهد")
+st.markdown("---")
 
-# CSS عام RTL + تصميم احترافي
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-html, body, [class*="css"] {font-family: 'Cairo', sans-serif; direction: rtl; text-align: right;}
-.main {background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); color: white;}
-.header-text h1 {font-size: 42px; color: #FFD700; margin: 0; font-weight: 700;}
-.stMetric {background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.3);}
-.stButton>button {background: rgba(255,215,0,0.15); border: 1px solid #FFD700; border-radius: 12px; color: white; font-weight: 600; width: 100%;}
-</style>
-""", unsafe_allow_html=True)
-
-# الهيدر
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.image("logo.png", width=120)
-with col2:
-    st.markdown('<div class="header-text"><h1>⚡ SSE Smart Solar Platform</h1><p>منصة المهندسة شهد | تصميم أنظمة الطاقة الشمسية الذكية v2.1</p></div>', unsafe_allow_html=True)
-
-st.divider()
-
-# 1. تحديد الموقع GPS
-st.markdown("<h2>🌍 بيانات الموقع الجغرافي</h2>", unsafe_allow_html=True)
-
-col1, col2 = st.columns([1, 3])
-with col1:
-    get_loc = st.button("📍 تحديد موقعي تلقائياً GPS", use_container_width=True, type="primary")
-with col2:
-    st.caption("اضغطي الزر ووافقي على إذن الموقع من المتصفح")
-
-# متغيرات الجلسة
-if 'latitude' not in st.session_state:
-    st.session_state.latitude = 15.6500  # الخرطوم افتراضي
-if 'longitude' not in st.session_state:
-    st.session_state.longitude = 32.4800
-
-# كود JS يجيب GPS
-if get_loc:
-    js_code = """new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-            (position) => resolve({lat: position.coords.latitude, lon: position.coords.longitude}),
-            (error) => reject(error.message)
-        );
-    });"""
-    location = streamlit_js_eval(js_code=js_code, key='gps')
-    if location and 'lat' in location:
-        st.session_state.latitude = location['lat']
-        st.session_state.longitude = location['lon']
-        st.success(f"تم تحديد الموقع! Lat: {location['lat']:.4f}, Lon: {location['lon']:.4f}")
-    elif location:
-        st.warning(f"تعذر تحديد الموقع: {location}")
-
-# 2. إدخال يدوي كخيار احتياطي
+# صف 1
 col1, col2, col3 = st.columns(3)
-with col1:
-    latitude = st.number_input("خط العرض Latitude", value=float(st.session_state.latitude), format="%.6f")
-with col2:
-    longitude = st.number_input("خط الطول Longitude", value=float(st.session_state.longitude), format="%.6f")
-with col3:
-    season = st.selectbox("نمط التركيب", ["سنوي ثابت", "أقصى إنتاج صيفي", "أقصى إنتاج شتوي"])
+col1.metric("البوت الذكي", "شغال")
+col2.metric("حاسبة الطاقة", "شغالة") 
+col3.metric("المتجر", "شغال")
 
-# 3. حساب زاوية الميلان Tilt
-if season == "سنوي ثابت":
-    tilt = latitude
-elif season == "أقصى إنتاج صيفي":
-    tilt = max(5, latitude - 15)
-else:
-    tilt = latitude + 15
+# صف 2
+col4, col5, col6 = st.columns(3)
+col4.metric("عدد الأعطال", "0")
+col5.metric("الطاقة اليوم", "0 kWh")
+col6.metric("حالة النظام", "ممتاز")
 
-tilt_factor = math.cos(math.radians(tilt - latitude)) * 0.98 + 0.02
-base_irradiance = 5.8 + (latitude - 15.5) * 0.1
-irradiance = base_irradiance * tilt_factor
-
-# 4. اتجاه التركيب Azimuth
-st.markdown("<h3>🧭 اتجاه تركيب الألواح</h3>", unsafe_allow_html=True)
-azimuth = st.slider("اتجاه اللوح: 0° شمال | 90° شرق | 180° جنوب | 270° غرب", min_value=0, max_value=360, value=180, step=5)
-
-if azimuth == 180:
-    st.success("✅ اتجاه مثالي - جنوب حقيقي")
-    azimuth_loss = 1.0
-elif 165 <= azimuth <= 195:
-    st.info("🟢 ممتاز ±15° - فقد 2%")
-    azimuth_loss = 0.98
-else:
-    st.warning("🟡 فقد في الانتاج")
-    azimuth_loss = 0.90
-
-# 5. الإشعاع النهائي
-final_irradiance = irradiance * azimuth_loss
-
-st.divider()
-col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("خط العرض", f"{latitude:.4f}°")
-col2.metric("خط الطول", f"{longitude:.4f}°")
-col3.metric("زاوية الميلان", f"{tilt:.1f}°")
-col4.metric("اتجاه اللوح", f"{azimuth}°")
-col5.metric("الإشعاع", f"{final_irradiance:.2f} kWh/m²/day")
-
-st.info(f"التوصية: تركيب الألواح بزاوية {tilt:.1f}° واتجاه {azimuth}° جنوب")
-
-# حفظ القيم للصفحات التانية
-st.session_state.latitude = latitude
-st.session_state.longitude = longitude
-st.session_state.tilt = tilt
-st.session_state.azimuth = azimuth
-st.session_state.irradiance = final_irradiance
+st.info("💡 كل الصفحات في الشريط الجانبي ←")
