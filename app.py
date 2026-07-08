@@ -3,42 +3,41 @@ import streamlit as st
 st.set_page_config(
     page_title="محاكي المنظومة SSE", 
     page_icon="⚡", 
-    layout="wide",
+    layout="centered",  # غيرنا من wide ل centered عشان تظبط في التلفون
     initial_sidebar_state="collapsed"
 )
 
-# العلاج: نهرب من الشريط + نجبر RTL + خط عربي
 st.markdown("""
 <style>
-    /* 1. نهرب من شريط Streamlit بي 160px */
-   .block-container {
-        padding-top: 160px!important; 
-        direction: rtl !important;
-    }
+    /* نرجع البادينق طبيعي زي زمان 1rem بس */
+   .block-container {padding-top: 1rem!important; direction: rtl !important;}
     
-    /* 2. نجبر كل شي يمين */
-    html, body, [data-testid="stAppViewContainer"] {
-        direction: rtl !important;
-        text-align: right !important;
-    }
+    /* نخفي القائمة الجانبية نهائي */
+    [data-testid="stSidebar"] {display: none !important;}
+    [data-testid="collapsedControl"] {display: none !important;} /* نخفي زر القائمة */
     
-    /* 3. خط عربي نضيف */
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-    html, body, [class*="css"] {
+    /* نصغر شريط Streamlit بس */
+    [data-testid="stToolbar"] {zoom: 0.5 !important; opacity: 0.15 !important;}
+    
+    html, body {
+        direction: rtl !important;
+        text-align: center !important; /* نخلي العنوان في النص */
         font-family: 'Cairo', sans-serif !important;
     }
     
-    /* 4. العنوان */
     h1 {
-        text-align: center!important; 
         color: #FFD700!important; 
         font-size: 34px!important;
         font-weight: 700!important;
+        margin-top: 10px!important;
     }
     
-    /* 5. نخفي الفوتر */
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-st.switch_page("pages/01_🏠_الرئيسية.py")
+st.title("⚡ محاكي المنظومة SSE")
+st.markdown("SSE | IEC 60364 + NEC 430")
+st.warning("⚠️ يرجى الرجوع لصفحة الاحمال واضافة الاجهزة أولاً")
+if st.button("⬅️ الرجوع لصفحة الاحمال"):
+    st.switch_page("pages/01_🏠_الرئيسية.py")
