@@ -8,3 +8,6 @@ qrcode
 google-generativeai
 reportlab
 openpyxl
+pvlib
+pvfactors
+scikit-learn
