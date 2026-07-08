@@ -21,7 +21,7 @@ try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     AI_ENABLED = True
 except:
-    pass 
+    pass
 
 # === 4. قاعدة البيانات ===
 conn = sqlite3.connect('shahd_alatal06.db', check_same_thread=False)
@@ -108,10 +108,10 @@ if st.session_state.role == "مهندس":
     with tab3:
         st.markdown("""
         <style>
-     .product-card {background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid #FFD700; margin-bottom: 20px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;}
-     .product-title {color: #1e3c72; font-weight: 800; font-size: 18px; margin-bottom: 10px;}
-     .product-price {color: #FF8C00; font-weight: 700; font-size: 22px;}
-     .stButton>button {background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border-radius: 10px; font-weight: 700; border: none; width: 100%;}
+    .product-card {background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid #FFD700; margin-bottom: 20px; height: 380px; display: flex; flex-direction: column; justify-content: space-between;}
+    .product-title {color: #1e3c72; font-weight: 800; font-size: 18px; margin-bottom: 10px;}
+    .product-price {color: #FF8C00; font-weight: 700; font-size: 22px;}
+    .stButton>button {background: linear-gradient(90deg, #1e3c72, #2a5298); color: white; border-radius: 10px; font-weight: 700; border: none; width: 100%;}
         </style>
         """, unsafe_allow_html=True)
 
@@ -168,7 +168,9 @@ if st.session_state.role == "مهندس":
                     if col_d.button("🗑️", key=f"del{i}", use_container_width=True):
                         st.session_state.cart.pop(i); st.rerun()
                     total_cart += item['price'] * qty
-            st.success(f"**الاجمالي الكلي: ${total_cart}**")
+            st.markdown("---")
+            # === هنا التعديل المهم ===
+            st.success(f"**الاجمالي الكلي: {total_cart}$**")
             with st.form("order_form"):
                 name = st.text_input("اسمك")
                 phone = st.text_input("رقم تلفونك")
@@ -178,4 +180,25 @@ if st.session_state.role == "مهندس":
                         items_str = ", ".join([f"{x['qty']}x {x['type']}: {x['item']}" for x in st.session_state.cart])
                         c.execute("INSERT INTO orders VALUES (NULL,?,?,?,?,?,?,?)", (code, name, phone, items_str, total_cart, "pending", str(datetime.date.today())))
                         conn.commit()
-                        st.success(f"✅ تم ارسال الطلب رقم {code} للاد
+                        st.success(f"✅ تم ارسال الطلب رقم {code} للادمن")
+                        st.session_state.cart = []; st.rerun()
+                    else: st.error("دخل الاسم والتلفون")
+        else:
+            st.info("السلة فاضية. اضف منتجات من فوق 👆")
+
+# === 8. لوحة الادمن ===
+else:
+    st.header("👑 لوحة تحكم الادمن")
+    orders = c.execute("SELECT * FROM orders WHERE status='pending'").fetchall()
+    st.info(f"عندك {len(orders)} طلب معلق")
+    for o in orders:
+        with st.container(border=True):
+            st.write(f"**رقم الطلب:** {o[1]}")
+            st.write(f"**الاسم:** {o[2]} | **التلفون:** {o[3]}")
+            st.write(f"**المنتجات:** {o[4]}")
+            st.write(f"**الاجمالي:** {o[5]}$")
+            col1, col2 = st.columns(2)
+            if col1.button("✅ تاكيد الطلب", key=f"ok{o[0]}", use_container_width=True):
+                c.execute("UPDATE orders SET status='active' WHERE id=?", (o[0],)); conn.commit(); st.success("تم التاكيد"); st.rerun()
+            if col2.button("❌ رفض الطلب", key=f"no{o[0]}", use_container_width=True):
+                c.execute("DELETE FROM orders WHERE id=?", (o[0],)); conn.commit(); st.warning("تم الرفض"); st.rerun()
