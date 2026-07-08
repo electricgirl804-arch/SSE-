@@ -1,21 +1,38 @@
 import streamlit as st
 import sqlite3
+import datetime
 
 st.set_page_config(page_title="الأعطال 06", page_icon="⚡", layout="wide")
 
-# === تنسيق RTL للعربي ===
+# === كود تصليح التداخل + RTL ===
 st.markdown("""
 <style>
+    /* نخلي كلو يمين */
     html, body,.main {
         direction: rtl;
         text-align: right;
     }
+
+    /* نرجع زر القائمة يمين */
+    [data-testid="collapsedControl"] {
+        right: 1rem!important;
+        left: auto!important;
+    }
+
+    /* ننزل الهيدر */
+    header[data-testid="stHeader"] {
+        height: 3.5rem;
+    }
+
+    /* العنوان */
     h1 {
         text-align: center!important;
         color: #FFD700!important;
-        font-size: 32px!important;
+        font-size: 30px!important;
+        padding-top: 1rem;
     }
-   .stButton>button {
+
+  .stButton>button {
         background: linear-gradient(90deg, #1e3c72, #2a5298);
         color: white;
         border-radius: 10px;
@@ -49,19 +66,22 @@ if st.session_state.role == None:
         password = st.text_input("دخل كلمة سر الادمن", type="password")
         if st.button("دخول", use_container_width=True):
             if password == ADMIN_SECRET:
-                st.session_state.role = "ادمن"; st.rerun()
+                st.session_state.role = "ادمن"
+                st.rerun()
             else:
                 st.error("❌ كلمة السر غلط")
 
     if role == "مهندس":
         if st.button("دخول كمهندس", use_container_width=True):
-            st.session_state.role = "مهندس"; st.rerun()
+            st.session_state.role = "مهندس"
+            st.rerun()
     st.stop()
 
 # === الشريط الجانبي ===
 st.sidebar.success(f"مرحبا: {st.session_state.role}")
 if st.sidebar.button("تسجيل خروج"):
-    st.session_state.role = None; st.rerun()
+    st.session_state.role = None
+    st.rerun()
 
 # === لوحة الادمن ===
 if st.session_state.role == "ادمن":
@@ -80,9 +100,15 @@ if st.session_state.role == "ادمن":
             st.write(f"**الاجمالي:** ${o[5]}")
             col1, col2 = st.columns(2)
             if col1.button("✅ تاكيد الطلب", key=f"ok{o[0]}", use_container_width=True):
-                c.execute("UPDATE orders SET status='active' WHERE id=?", (o[0],)); conn.commit(); st.success("تم التاكيد"); st.rerun()
+                c.execute("UPDATE orders SET status='active' WHERE id=?", (o[0],))
+                conn.commit()
+                st.success("تم التاكيد")
+                st.rerun()
             if col2.button("❌ رفض الطلب", key=f"no{o[0]}", use_container_width=True):
-                c.execute("DELETE FROM orders WHERE id=?", (o[0],)); conn.commit(); st.warning("تم الرفض"); st.rerun()
+                c.execute("DELETE FROM orders WHERE id=?", (o[0],))
+                conn.commit()
+                st.warning("تم الرفض")
+                st.rerun()
 
 # === صفحة المهندس الرئيسية ===
 else:
