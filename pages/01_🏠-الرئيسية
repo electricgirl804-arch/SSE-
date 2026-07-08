@@ -3,8 +3,16 @@ import pandas as pd
 import numpy as np
 import math
 from streamlit_js_eval import streamlit_js_eval
+import google.generativeai as genai
 
 st.set_page_config(page_title="SSE Smart Solar Platform", page_icon="logo.png", layout="wide")
+
+# ==== تفعيل AI بأمان عشان ما يقع ====
+try:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    AI_ENABLED = True
+except:
+    AI_ENABLED = False
 
 # CSS عام RTL + تصميم احترافي
 st.markdown("""
@@ -13,11 +21,8 @@ st.markdown("""
 html, body, [class*="css"] {font-family: 'Cairo', sans-serif; direction: rtl; text-align: right;}
 .main {background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); color: white;}
 .header-text h1 {font-size: 42px; color: #FFD700; margin: 0; font-weight: 700;}
-.header-text p {font-size: 18px; color: #fff; margin: 5px 0 0 0;}
 .stMetric {background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.3);}
-.stMetric:hover {transform: translateY(-5px); transition: 0.3s;}
-.stButton>button {background: rgba(255,215,0,0.15); border: 1px solid #FFD700; border-radius: 12px; color: white; font-weight: 600; padding: 10px 20px; width: 100%;}
-.stButton>button:hover {background: rgba(255,215,0,0.3); transform: translateY(-2px);}
+.stButton>button {background: rgba(255,215,0,0.15); border: 1px solid #FFD700; border-radius: 12px; color: white; font-weight: 600; width: 100%;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -41,25 +46,23 @@ with col2:
 
 # متغيرات الجلسة
 if 'latitude' not in st.session_state:
-    st.session_state.latitude = 15.65
+    st.session_state.latitude = 15.6500  # الخرطوم افتراضي
 if 'longitude' not in st.session_state:
-    st.session_state.longitude = 32.48
+    st.session_state.longitude = 32.4800
 
 # كود JS يجيب GPS
 if get_loc:
-    js_code = """
-    new Promise((resolve, reject) => {
+    js_code = """new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
-            (position) => resolve({lat: position.coords.latitude, lon: position.coords.longitude, accuracy: position.coords.accuracy}),
+            (position) => resolve({lat: position.coords.latitude, lon: position.coords.longitude}),
             (error) => reject(error.message)
         );
-    });
-    """
+    });"""
     location = streamlit_js_eval(js_code=js_code, key='gps')
     if location and 'lat' in location:
         st.session_state.latitude = location['lat']
         st.session_state.longitude = location['lon']
-        st.success(f"تم تحديد الموقع! الدقة: ±{location['accuracy']:.0f} متر")
+        st.success(f"تم تحديد الموقع! Lat: {location['lat']:.4f}, Lon: {location['lon']:.4f}")
     elif location:
         st.warning(f"تعذر تحديد الموقع: {location}")
 
@@ -94,12 +97,9 @@ if azimuth == 180:
 elif 165 <= azimuth <= 195:
     st.info("🟢 ممتاز ±15° - فقد 2%")
     azimuth_loss = 0.98
-elif 135 <= azimuth <= 225:
-    st.warning("🟡 مقبول ±45° - فقد 10%")
-    azimuth_loss = 0.90
 else:
-    st.error("🔴 فقد كبير >45° - فقد 20%")
-    azimuth_loss = 0.80
+    st.warning("🟡 فقد في الانتاج")
+    azimuth_loss = 0.90
 
 # 5. الإشعاع النهائي
 final_irradiance = irradiance * azimuth_loss
@@ -110,47 +110,9 @@ col1.metric("خط العرض", f"{latitude:.4f}°")
 col2.metric("خط الطول", f"{longitude:.4f}°")
 col3.metric("زاوية الميلان", f"{tilt:.1f}°")
 col4.metric("اتجاه اللوح", f"{azimuth}°")
-col5.metric("الإشعاع النهائي", f"{final_irradiance:.2f} kWh/m²/day")
+col5.metric("الإشعاع", f"{final_irradiance:.2f} kWh/m²/day")
 
-st.info(f"التوصية: تركيب الألواح بزاوية {tilt:.1f}° واتجاه {azimuth}° جنوب لضمان أقصى إنتاج")
-
-st.divider()
-
-# أزرار التنقل
-st.markdown("<h2>📊 خدمات المنصة</h2>", unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("### 1. محاكي الأحمال")
-    st.write("حساب الاستهلاك وتحديد حجم النظام")
-    if st.button("الدخول للمحاكي", key="load", use_container_width=True):
-        st.switch_page("03_⚡_المحاكي.py")
-
-with col2:
-    st.markdown("### 2. حساب الظلال")
-    st.write("تحليل التظليل وتأثيره")
-    if st.button("الدخول لحساب الظلال", key="shadow", use_container_width=True):
-        st.switch_page("04_الظلال_ultra.py")
-
-with col3:
-    st.markdown("### 3. مقطع الكيبل")
-    st.write("حساب مقطع الكيبل وهبوط الجهد")
-    if st.button("الدخول لحساب الكيبل", key="cable", use_container_width=True):
-        st.switch_page("05_الكيبل.py")
-
-col4, col5, col6 = st.columns(3)
-with col4:
-    if st.button("الحمايات والقواطع", key="protect", use_container_width=True):
-        st.switch_page("06_الحمايات.py")
-with col5:
-    if st.button("التقرير الفني PDF", key="report", use_container_width=True):
-        st.switch_page("07_التقرير.py")
-with col6:
-    if st.button("حساب التكلفة", key="cost", use_container_width=True):
-        st.switch_page("10_التكلفة.py")
-
-st.divider()
-st.caption("SSE v2.1 | جميع الحسابات حسب IEC 61727 | الموقع والميلان والاتجاه مربوطة تلقائياً")
+st.info(f"التوصية: تركيب الألواح بزاوية {tilt:.1f}° واتجاه {azimuth}° جنوب")
 
 # حفظ القيم للصفحات التانية
 st.session_state.latitude = latitude
