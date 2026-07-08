@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from utils import CSS, check_session, init_session_state
 
 st.set_page_config(page_title="SSE الأحمال", page_icon="⚡", layout="wide")
@@ -11,7 +12,7 @@ st.title("🔧 إدارة الأحمال - IEC 60364")
 st.markdown(f"الإشعاع: {st.session_state.irradiance:.2f} kWh/m² | حرارة الخلية: {st.session_state.cell_temp:.1f}°C")
 
 def get_device_icon(name):
-    name = name.lower()
+    name = str(name).lower()
     if "لمبة" in name or "إضاءة" in name: return "💡"
     elif "مكيف" in name or "تكييف" in name: return "❄️"
     elif "ثلاجة" in name or "فريزر" in name: return "🧊"
@@ -30,7 +31,6 @@ def get_device_icon(name):
 if 'loads' not in st.session_state:
     st.session_state.loads = []
 
-# غيرت "اختاري" لـ "اختر"
 location_type = st.selectbox("اختر نوع المكان", ["منزل سكني", "شقة/عمارة", "مؤسسة/مكتب", "مصنع صغير", "ورشة", "مزرعة", "محل تجاري"])
 div_factor = {"منزل سكني": 0.6, "شقة/عمارة": 0.5, "مؤسسة/مكتب": 0.7, "مصنع صغير": 0.8, "ورشة": 0.9, "مزرعة": 0.75, "محل تجاري": 0.7}[location_type]
 
@@ -95,28 +95,38 @@ if st.session_state.loads:
                                    "الاستهلاك Wh": st.column_config.NumberColumn(format="%.0f", disabled=True)
                                })
     
+    # الحل هنا: نملأ القيم الفاضية اول
+    edited_df = edited_df.fillna({"النوع": "مقاومي", "الكفاءة": 0.9, "القدرة W": 0, "الساعات": 0, "الجهاز": ""})
+    
     for i in range(len(edited_df)):
-        typ = edited_df.loc[i, "النوع"]
+        typ = str(edited_df.loc[i, "النوع"]) # هسي مضمون انو نص
         pf = 1.0 if "مقاومي" in typ else 0.8 if "حثي" in typ else 0.9
         surge_factor = 1.0 if "مقاومي" in typ else 6.0
-        eff = edited_df.loc[i, "الكفاءة"]
-        p_nom = edited_df.loc[i, "القدرة W"]
-        icon = get_device_icon(edited_df.loc[i, "الجهاز"])
+        
+        eff = float(edited_df.loc[i, "الكفاءة"])
+        p_nom = float(edited_df.loc[i, "القدرة W"])
+        hours = float(edited_df.loc[i, "الساعات"])
+        
+        icon = get_device_icon(str(edited_df.loc[i, "الجهاز"]))
         edited_df.loc[i, "الايقونة"] = icon
         edited_df.loc[i, "PF"] = pf
-        edited_df.loc[i, "القدرة الفعلية W"] = p_nom / eff
+        edited_df.loc[i, "القدرة الفعلية W"] = p_nom / eff if eff > 0 else 0
         edited_df.loc[i, "Surge W"] = p_nom * surge_factor
-        edited_df.loc[i, "الاستهلاك Wh"] = edited_df.loc[i, "القدرة الفعلية W"] * edited_df.loc[i, "الساعات"]
+        edited_df.loc[i, "الاستهلاك Wh"] = (p_nom / eff) * hours if eff > 0 else 0
     
     st.session_state.loads = edited_df.to_dict('records')
     
     total_wh = edited_df["الاستهلاك Wh"].sum()
     total_watt_actual = edited_df["القدرة الفعلية W"].sum()
     
-    max_surge_idx = edited_df["Surge W"].idxmax() if len(edited_df) > 0 else 0
-    max_surge = edited_df.loc[max_surge_idx, "Surge W"] if len(edited_df) > 0 else 0
-    rest_watt = total_watt_actual - edited_df.loc[max_surge_idx, "القدرة الفعلية W"] if len(edited_df) > 0 else 0
-    total_surge_nec = max_surge + rest_watt * 1.25
+    if len(edited_df) > 0:
+        max_surge_idx = edited_df["Surge W"].idxmax()
+        max_surge = edited_df.loc[max_surge_idx, "Surge W"]
+        rest_watt = total_watt_actual - edited_df.loc[max_surge_idx, "القدرة الفعلية W"]
+        total_surge_nec = max_surge + rest_watt * 1.25
+    else:
+        max_surge = 0
+        total_surge_nec = 0
     
     adjusted_watt = total_watt_actual * div_factor
     adjusted_surge = total_surge_nec * div_factor
@@ -129,7 +139,7 @@ if st.session_state.loads:
     temp_loss = abs(st.session_state.get('temp_loss', -12)) / 100
     
     total_system_loss = cable_loss + inverter_loss + battery_loss + temp_loss
-    watt_with_loss = adjusted_watt / (1 - total_system_loss)
+    watt_with_loss = adjusted_watt / (1 - total_system_loss) if total_system_loss < 1 else adjusted_watt
     va_with_loss = watt_with_loss / avg_pf
     
     st.divider()
@@ -150,6 +160,6 @@ if st.session_state.loads:
     if st.button("التالي → المحاكي 24 ساعة", use_container_width=True, type="primary"):
         st.switch_page("pages/03_⚡_المحاكي.py")
 else:
-    st.info("اختر نوع المكان واضغط تحميل قالب أو أضف جهاز يدوي") # غيرت هنا برضو
+    st.info("اختر نوع المكان واضغط تحميل قالب أو أضف جهاز يدوي")
 
 st.caption("IEC 60364 + NEC 430 + IEC 61727")
