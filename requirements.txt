@@ -8,3 +8,5 @@ Pillow
 reportlab
 qrcode
 python-dotenv
+folium
+streamlit-folium
