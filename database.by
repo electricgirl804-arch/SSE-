@@ -1,7 +1,7 @@
 import requests
 import streamlit as st
 from datetime import datetime
-WEB_APP_URL = "PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE"
+WEB_APP_URL = "PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE"  # <-- حطي الرابط هنا
 
 def save_to_sheet(data, sheet_type):
     data["التاريخ"] = datetime.now().strftime("%Y-%m-%d %H:%M")
