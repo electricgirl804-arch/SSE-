@@ -12,7 +12,7 @@ def load_css():
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
     html, body, [class*="st-"] {font-family: 'Cairo', sans-serif; direction: rtl;}
     body {background: linear-gradient(135deg, #0D47A1 0%, #1A1A1A 100%); color: white;}
-  .stButton>button {background: linear-gradient(90deg, #FFC107, #FFA000); color: black; border-radius: 15px; border: none; padding: 12px 25px; font-weight: bold; width: 100%;}
+ .stButton>button {background: linear-gradient(90deg, #FFC107, #FFA000); color: black; border-radius: 15px; border: none; padding: 12px 25px; font-weight: bold; width: 100%;}
     h1, h2, h3 {color: #FFC107!important; text-align: center;}
     [data-testid="stSidebar"] {display: none!important;}
     [data-testid="collapsedControl"] {display: none!important;}
