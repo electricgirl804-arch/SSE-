@@ -1,0 +1,12 @@
+COMPANY_NAME = "Smart Solara Engineer"
+ENGINEER_NAME = "م. شهد"
+ADMIN_EMAIL = "electricgirl804@gmail.com"
+ADMIN_PHONE = "0110560222"
+ADMIN_WHATSAPP = "https://wa.me/249110560222"
+ADMIN_PASSWORD = "Shahd@SSE2026!"
+COMPANY_LOGO = "assets/logo.png"
+COMPANY_ADDRESS = "الخرطوم - السودان"
+FOOTER = f"المهندس المسؤول: {ENGINEER_NAME} | 📱 {ADMIN_PHONE} | 📧 {ADMIN_EMAIL}"
+VERSION = "v5.4 - General"
+CURRENCY = "جنيه سوداني"
+WARRANTY_YEARS = 10
