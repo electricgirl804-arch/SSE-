@@ -1,27 +1,26 @@
 import streamlit as st
-from PIL import Image
 
 def check_login():
     if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = True
+        st.session_state.logged_in = False
+        st.session_state.user_type = None
+        st.session_state.username = None
+    
     if not st.session_state.logged_in:
-        st.warning("⚠️ الرجاء تسجيل الدخول اولا")
-        st.stop()
-
-def load_css():
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-    html, body, [class*="st-"] { font-family: 'Cairo', sans-serif; }
-   .stApp { direction: rtl; }
-   .block-container {padding-top: 2rem;}
-    </style>
-    """, unsafe_allow_html=True)
-
-def show_logo_as_cover():
-    """الدالة دي كانت ناقصة"""
-    try:
-        logo = Image.open("assets/logo.png")
-        st.image(logo, use_container_width=True)
-    except:
-        st.title("Smart Solara Engineer")
+        st.set_page_config(page_title="تسجيل الدخول", layout="centered")
+        st.title("تسجيل الدخول 👤")
+        
+        user_type = st.radio("سجل كـ", ["عميل", "ادمن"], horizontal=True)
+        st.write("---")
+        
+        if user_type == "ادمن":
+            username = st.text_input("الاسم")
+            password = st.text_input("كلمة السر", type="password")
+            
+            if st.button("دخول", use_container_width=True):
+                # بيانات الادمن
+                if username == "م.شهد" and password == "shahd8499":
+                    st.session_state.logged_in = True
+                    st.session_state.user_type = "admin"
+                    st.session_state.username = username
+                    st.success("تم
