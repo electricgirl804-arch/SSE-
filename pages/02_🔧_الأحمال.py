@@ -1,34 +1,15 @@
-import streamlit as st
-import pandas as pd
-
-st.set_page_config(page_title="محاكي المنظومة", page_icon="⚡", layout="wide")
-
-st.markdown("""
-<style>
-    html, body,.main {direction: rtl; text-align: right;}
-    h1 {text-align: center!important; color: #FFD700!important;}
-</style>
-""", unsafe_allow_html=True)
-
-st.title("⚡ محاكي المنظومة SSE")
-st.caption("تم التطوير بواسطة فريق SSE | IEC 60364 + NEC 430")
-
-# === نشيك لو في أحمال ولا لا ===
-if 'loads' not in st.session_state or len(st.session_state.loads) == 0:
-    st.warning("⚠️ يرجى الرجوع لصفحة الأحمال وإضافة الأجهزة أولاً")
-    if st.button("⬅️ الرجوع لصفحة الأحمال", use_container_width=True):
-        # دا التعديل المهم: لازم الاسم يطابق اسم الملف بالضبط
-        st.switch_page("pages/02_🔧_الأحمال.py")
-    st.stop()
-
-# === باقي كود المحاكي بتاعك ===
-st.success("تم تحميل الأحمال بنجاح")
-
+import streamlit as st, pandas as pd
+from utils import check_login, load_css
+from database import save_to_sheet
+check_login(); load_css()
+st.title("🔌 حاسبة الاحمال الذكية")
+name = st.text_input("اسم العميل"); phone = st.text_input("رقم الواتساب")
+if 'loads' not in st.session_state: st.session_state.loads = []
+device = st.selectbox("اختار الجهاز", ["مكيف 1 حصان","ثلاجة 12 قدم","شاشة 43","مروحة سقف","لمبة LED"])
+power = st.number_input("قدرة الجهاز بالواط", 100, 5000, 200); hours = st.number_input("عدد ساعات التشغيل", 1.0, 24.0, 5.0)
+if st.button("➕ اضافة للجدول"): st.session_state.loads.append({"الجهاز":device, "الواط":power, "الساعات":hours, "الاستهلاك_Wh":power*hours})
 df = pd.DataFrame(st.session_state.loads)
-st.dataframe(df, use_container_width=True)
-
-total_kw = df['power'].sum()
-st.metric("إجمالي الحمل", f"{total_kw:.2f} KW")
-
-# هنا كملي باقي حسابات المحاكي حقتك
-st.info("كملي باقي اكواد المحاكي تحت هنا")
+if len(df)>0: st.dataframe(df); st.session_state.total_kwh = df["الاستهلاك_Wh"].sum()/1000; st.metric("اجمالي الاستهلاك اليومي", f"{st.session_state.total_kwh:.2f} kWh")
+if st.button("💾 حفظ وانتقل للمحاكي"):
+    save_to_sheet({"الاسم":name, "الرقم":phone, "الاستهلاك_kWh":st.session_state.total_kwh}, "Customer")
+    st.success("تم الحفظ ✅"); st.switch_page("pages/03_⚡_المحاكي_العالمي.py")
