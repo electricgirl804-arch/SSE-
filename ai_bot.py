@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import streamlit as st
 from config import COMPANY_NAME, ENGINEER_NAME
-GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY"
+GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY"  # <-- حطي المفتاح هنا
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
