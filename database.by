@@ -1,14 +1,28 @@
-import requests
+import gspread
+from google.oauth2.service_account import Credentials
 import streamlit as st
-from datetime import datetime
-WEB_APP_URL = "PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE"  # <-- حطي الرابط هنا
 
-def save_to_sheet(data, sheet_type):
-    data["التاريخ"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-    data["النوع"] = sheet_type
+SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+
+def get_client():
+    creds_dict = st.secrets["gcp_service_account"]
+    CREDS = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
+    CLIENT = gspread.authorize(CREDS)
+    return CLIENT
+
+def save_to_sheet(data, sheet_name):
     try:
-        requests.post(WEB_APP_URL, json=data, timeout=10)
+        CLIENT = get_client()
+        SHEET = CLIENT.open("SSE_Database")
+        worksheet = SHEET.worksheet(sheet_name)
+        worksheet.append_row(list(data.values()))
         return True
     except Exception as e:
-        st.error(f"خطأ في الحفظ: {e}")
+        st.error(f"خطأ في الحفظ في قوقل شيت: {e}")
         return False
+
+def load_from_sheet(sheet_name):
+    CLIENT = get_client()
+    SHEET = CLIENT.open("SSE_Database")
+    worksheet = SHEET.worksheet(sheet_name)
+    return worksheet.get_all_records()
