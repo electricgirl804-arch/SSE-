@@ -1,4 +1,5 @@
 import streamlit as st
+from PIL import Image
 
 def check_login():
     if 'logged_in' not in st.session_state:
@@ -16,3 +17,11 @@ def load_css():
    .block-container {padding-top: 2rem;}
     </style>
     """, unsafe_allow_html=True)
+
+def show_logo_as_cover():
+    """الدالة دي كانت ناقصة"""
+    try:
+        logo = Image.open("assets/logo.png")
+        st.image(logo, use_container_width=True)
+    except:
+        st.title("Smart Solara Engineer")
