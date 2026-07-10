@@ -1,20 +1,14 @@
 import streamlit as st
-
-st.set_page_config(page_title="الرئيسية", page_icon="🏠", layout="wide")
-
-st.title("⚡ الأعطال 06 | المهندسة شهد")
-st.markdown("---")
-
-# صف 1
-col1, col2, col3 = st.columns(3)
-col1.metric("البوت الذكي", "شغال")
-col2.metric("حاسبة الطاقة", "شغالة") 
-col3.metric("المتجر", "شغال")
-
-# صف 2
-col4, col5, col6 = st.columns(3)
-col4.metric("عدد الأعطال", "0")
-col5.metric("الطاقة اليوم", "0 kWh")
-col6.metric("حالة النظام", "ممتاز")
-
-st.info("💡 كل الصفحات في الشريط الجانبي ←")
+from utils import load_css
+from config import ADMIN_PASSWORD
+load_css()
+st.title("👤 تسجيل الدخول")
+role = st.radio("سجل كـ", ["عميل", "ادمن"], horizontal=True)
+name = st.text_input("الاسم")
+password = st.text_input("كلمة السر", type="password")
+if st.button("دخول"):
+    if role == "ادمن" and password == ADMIN_PASSWORD:
+        st.session_state.user = {"name": name, "role": "admin"}; st.success("مرحباً م. شهد"); st.switch_page("pages/18_🔒_لوحة_الادمن.py")
+    elif role == "عميل":
+        st.session_state.user = {"name": name, "role": "customer"}; st.success(f"اهلا {name}"); st.switch_page("pages/02_🔌_الأحمال.py")
+    else: st.error("كلمة السر خطأ")
