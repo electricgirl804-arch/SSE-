@@ -1,18 +1,28 @@
-import sqlite3
+import requests
+import streamlit as st
 
-DB_NAME = "users.db"
+API_KEY = st.secrets["jsonbin_key"]
+HEADERS = {'Content-Type': 'application/json', 'X-Master-Key': API_KEY}
 
-def save_to_sheet(name, phone, total_watt, system_size):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    
-    # نعمل جدول لو ما موجود
-    c.execute('''CREATE TABLE IF NOT EXISTS requests
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                 name TEXT, phone TEXT, total_watt REAL, system_size TEXT, date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
-    
-    # نخزن البيانات
-    c.execute("INSERT INTO requests (name, phone, total_watt, system_size) VALUES (?,?,?,?)",
-              (name, phone, total_watt, system_size))
-    conn.commit()
-    conn.close()
+BIN_ID_USERS = "users_bin_id" # غيريه بعد تنشئي البن
+BIN_ID_REQUESTS = "requests_bin_id" # غيريه بعد تنشئي البن
+
+def save_to_sheet(data, bin_type):
+    bin_id = BIN_ID_USERS if bin_type == "users" else BIN_ID_REQUESTS
+    try:
+        res = requests.get(f"https://api.jsonbin.io/v3/b/{bin_id}/latest", headers=HEADERS)
+        records = res.json()['record'] if res.status_code == 200 else []
+        records.append(data)
+        requests.put(f"https://api.jsonbin.io/v3/b/{bin_id}", json=records, headers=HEADERS)
+        return True
+    except Exception as e:
+        st.error(f"خطأ في الحفظ: {e}")
+        return False
+
+def load_from_sheet(bin_type):
+    bin_id = BIN_ID_USERS if bin_type == "users" else BIN_ID_REQUESTS
+    try:
+        res = requests.get(f"https://api.jsonbin.io/v3/b/{bin_id}/latest", headers=HEADERS)
+        return res.json()['record'] if res.status_code == 200 else []
+    except:
+        return []
