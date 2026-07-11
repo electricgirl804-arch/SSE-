@@ -1,11 +1,11 @@
 import requests
 import streamlit as st
+import json
 
 API_KEY = st.secrets["jsonbin_key"]
 HEADERS = {'Content-Type': 'application/json', 'X-Master-Key': API_KEY}
-
-BIN_ID_USERS = "users_bin_id" # غيريه بعد تنشئي البن
-BIN_ID_REQUESTS = "requests_bin_id" # غيريه بعد تنشئي البن
+BIN_ID_USERS = "users_bin_id"
+BIN_ID_REQUESTS = "requests_bin_id"
 
 def save_to_sheet(data, bin_type):
     bin_id = BIN_ID_USERS if bin_type == "users" else BIN_ID_REQUESTS
@@ -15,14 +15,15 @@ def save_to_sheet(data, bin_type):
         records.append(data)
         requests.put(f"https://api.jsonbin.io/v3/b/{bin_id}", json=records, headers=HEADERS)
         return True
-    except Exception as e:
-        st.error(f"خطأ في الحفظ: {e}")
-        return False
+    except: return False
 
 def load_from_sheet(bin_type):
     bin_id = BIN_ID_USERS if bin_type == "users" else BIN_ID_REQUESTS
     try:
         res = requests.get(f"https://api.jsonbin.io/v3/b/{bin_id}/latest", headers=HEADERS)
         return res.json()['record'] if res.status_code == 200 else []
-    except:
-        return []
+    except: return []
+
+def load_products():
+    with open("products.json", "r", encoding="utf-8") as f:
+        return json.load(f)
