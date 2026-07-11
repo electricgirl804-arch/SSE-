@@ -3,7 +3,7 @@ from utils import load_css, show_header, check_login, logout
 
 st.set_page_config(
     page_title="SSE - Smart Solara Engineer",
-    page_icon="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKACAYAAAB6uZQaAAAgAElEQVR4AezdB7Ak5XUo4M/7...END", # ختي اول 200 حرف من كود الشعار الفي utils
+    page_icon="🌞",  # غيرتو لايموجي عشان ما يعلق
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -11,8 +11,8 @@ st.set_page_config(
 # 1. نشغل الاستايل والخلفية والشعار
 load_css()
 
-# 2. نتأكد من تسجيل الدخول. لو ما مسجل بديك صفحة الدخول ويقيف هنا
-check_login()
+# 2. مؤقتا: علقنا تسجيل الدخول عشان نجرب
+# check_login()
 
 # 3. لو مسجل بديك الهيدر + زر الخروج في السايدبار
 show_header()
