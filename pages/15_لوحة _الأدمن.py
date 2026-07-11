@@ -1,41 +1,47 @@
 import streamlit as st
 import pandas as pd
-from utils import check_login, logout
+from utils import check_login, logout, load_css
 from database import load_from_sheet
 
-st.set_page_config(page_title="لوحة الادمن", layout="wide")
+st.set_page_config(page_title="لوحة الادمن", layout="wide", page_icon="👑")
+load_css() # نشغل الاستايل
+check_login(); logout()
 
-check_login()
-logout()
-
-# حماية: بس الادمن يقدر يشوف الصفحة دي
-if st.session_state.get('user_type') != "admin":
-    st.error("⛔ الصفحة دي للادمن فقط")
-    st.stop()
+if st.session_state.get('user_type')!= "admin":
+    st.error("⛔ الصفحة دي للادمن فقط"); st.stop()
 
 st.title("لوحة تحكم الادمن 👑")
-st.markdown("هنا بتشوفي كل طلبات العملاء الجات من حاسبة الاحمال")
+st.markdown("### هنا بتشوفي كل طلبات العملاء الجات من حاسبة الاحمال")
 
-# نسحب البيانات من قوقل شيت ورقة requests
-try:
-    data = load_from_sheet("requests")
-    df = pd.DataFrame(data)
-except Exception as e:
-    st.error(f"خطأ في جلب البيانات من الشيت: {e}")
-    st.stop()
+data = load_from_sheet("requests")
+df = pd.DataFrame(data)
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("عدد الطلبات الكلي", len(df))
+with col2:
+    if not df.empty:
+        st.metric("متوسط الاحمال", f"{df['total_watt'].astype(float).mean():.0f} واط")
+with col3:
+    st.metric("اخر تحديث", "الان")
+
+st.divider()
 
 if df.empty:
-    st.warning("لسه ما في اي طلبات")
+    st.warning("📭 لسه ما في اي طلبات")
 else:
-    st.success(f"عدد الطلبات الكلي: {len(df)}")
+    st.success(f"تم جلب {len(df)} طلب بنجاح")
     
-    # عرض الجدول
-    st.dataframe(df, use_container_width=True)
+    # فلتر بالاسم
+    search = st.text_input("🔍 ابحثي باسم العميل او الرقم")
+    if search:
+        df = df[df.apply(lambda row: search in str(row).lower(), axis=1)]
     
-    # زر تحميل البيانات
+    st.dataframe(df, use_container_width=True, height=400)
+    
     csv = df.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
-        label="📥 تحميل البيانات Excel",
+        label="📥 تحميل كل البيانات Excel",
         data=csv,
         file_name="طلبات_SSE.csv",
         mime="text/csv",
@@ -43,4 +49,4 @@ else:
     )
 
 st.divider()
-st.caption("© SSE 2026")
+st.caption("© SSE 2026 - لوحة تحكم سرية")
