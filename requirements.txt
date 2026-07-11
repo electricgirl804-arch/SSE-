@@ -7,3 +7,4 @@ openpyxl
 folium
 geopy
 plotly
+fpdf
