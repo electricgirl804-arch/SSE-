@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import math
-from utils import check_login, logout
+from utils import check_login, logout, load_css
 
-check_login(); logout()
+check_login(); logout(); load_css()
 
 st.set_page_config(page_title="SSE - المحاكي", page_icon="⚡", layout="wide")
 
@@ -21,7 +21,7 @@ h1 {color: #FFD700 !important; font-weight: 700; text-align: center; padding: 20
 """, unsafe_allow_html=True)
 
 st.title("⚡ محاكي المنظومة SSE")
-st.caption("تم التطوير بواسطة فريق SSE | IEC 60364 + NEC 430")
+st.caption("تم التطوير بواسطة م شهد | IEC 60364 + NEC 430")
 
 # التحقق من البيانات الجاية من صفحة 02_الاحمال
 if 'total_kwh' not in st.session_state or 'irradiance' not in st.session_state:
@@ -86,6 +86,7 @@ array_kw = num_panels_round * panel_watt / 1000
 # حساب البطاريات
 battery_kwh = (total_kwh * autonomy) / dod / 0.9
 battery_ah = math.ceil(battery_kwh * 1000 / battery_volt)
+num_batteries = math.ceil(battery_ah/200)
 
 # حساب المحول +25% هامش أمان IEC
 inverter_needed = math.ceil(total_va * 1.25 / 1000)
@@ -145,7 +146,7 @@ st.markdown(f"""
 | --- | --- | --- |
 | خلايا | {panel_watt}W Mono PERC Voc={voc}V Isc={isc}A | {num_panels_round} |
 | محول | {inv_kva}kVA 48VDC→220VAC موجة نقية 96% | 1 |
-| بطاريات LiFePO4 | {battery_ah}Ah {battery_volt}V {battery_kwh:.1f}kWh | {math.ceil(battery_ah/200)} سترينج |
+| بطاريات LiFePO4 | {battery_ah}Ah {battery_volt}V {battery_kwh:.1f}kWh | {num_batteries} سترينج |
 | قاطع DC | {dc_breaker}A 1000V DC MCB | 1 |
 | قاطع AC | {ac_breaker}A 220V AC MCB | 1 |
 | كيبل PV | {area_pv}mm² PV1-F | {dist_pv*2} متر |
@@ -161,15 +162,24 @@ st.success(f"""
 - زاوية التركيب: {tilt:.1f}° واتجاه {azimuth}° جنوب
 """)
 
-# حفظ النتائج للتقرير
+# ===== حفظ النتائج لكل الصفحات =====
 st.session_state.num_panels = num_panels_round
 st.session_state.array_kw = array_kw
 st.session_state.battery_ah = battery_ah
 st.session_state.inverter_kw = inv_kva
 st.session_state.total_kwh = total_kwh
 st.session_state.battery_volt = battery_volt
+st.session_state.num_batteries = num_batteries
+st.session_state.energy_year = array_kw * irradiance * 365 * PR
+st.session_state.payback = 5 # مؤقت
 
-if st.button("📄 تصدير التقرير النهائي PDF", use_container_width=True, type="primary"):
-    st.success("تم إنشاء التقرير بنجاح. جاهز للطباعة")
+st.divider()
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("📄 التقرير النهائي PDF", use_container_width=True, type="primary"):
+        st.switch_page("pages/07_📄_التقرير_والعقد.py")
+with col2:
+    if st.button("📈 مخططات التكاليف", use_container_width=True):
+        st.switch_page("pages/08_📈_المخططات.py")
 
 st.caption("الحسابات حسب IEC 60364 + NEC 690 + IEC 61727")
