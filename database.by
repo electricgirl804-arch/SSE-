@@ -40,6 +40,10 @@ def save_to_sheet(data, sheet_name):
 def load_orders(): return load_json(FILE_ORDERS)
 def load_suppliers(): return load_json(FILE_SUPPLIERS)
 
+# دي عشان utils.py ما يضرب
+def load_from_sheet():
+    return load_products()
+
 def create_invoice_pdf(order):
     pdf = FPDF()
     pdf.add_page()
