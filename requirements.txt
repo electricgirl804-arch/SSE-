@@ -1,4 +1,7 @@
 streamlit
+streamlit-option-menu
+streamlit-geolocator
+streamlit-folium
 pandas
 openpyxl
 google-auth
@@ -9,4 +12,8 @@ reportlab
 qrcode
 python-dotenv
 folium
-streamlit-folium
+geopy
+pvlib
+timezonefinder
+plotly
+requests
