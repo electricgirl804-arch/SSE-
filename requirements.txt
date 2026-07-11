@@ -17,3 +17,6 @@ pvlib
 timezonefinder
 plotly
 requests
+google-generativeai
+protobuf
+grpcio
