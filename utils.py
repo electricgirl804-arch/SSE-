@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import hashlib
+import os
 
 DB_NAME = "users.db"
 
@@ -8,12 +9,17 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def init_db():
+    # نمسح القاعدة القديمة لو موجودة عشان نبدأ نضيف
+    if os.path.exists(DB_NAME):
+        os.remove(DB_NAME)
+        
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, user_type TEXT)''')
-    # الادمن - شلنا النقطة عشان ما تعمل مشاكل
-    c.execute("INSERT OR IGNORE INTO users (username, password, user_type) VALUES (?, ?, ?)",
+    
+    # نضيف الادمن
+    c.execute("INSERT INTO users (username, password, user_type) VALUES (?, ?, ?)",
               ("م شهد", hash_password("shahd8499"), "admin"))
     conn.commit()
     conn.close()
@@ -49,7 +55,7 @@ def check_login():
                     st.session_state.logged_in = True
                     st.session_state.user_type = user_type
                     st.session_state.username = username
-                    st.success("تم تسجيل الدخول")
+                    st.success(f"اهلا {username}")
                     st.rerun()
                 else:
                     st.error("البيانات خطأ")
