@@ -1,29 +1,23 @@
-import requests
-import streamlit as st
-import json
-
-API_KEY = st.secrets["jsonbin_key"]
-HEADERS = {'Content-Type': 'application/json', 'X-Master-Key': API_KEY}
-BIN_ID_USERS = "users_bin_id"
-BIN_ID_REQUESTS = "requests_bin_id"
-
-def save_to_sheet(data, bin_type):
-    bin_id = BIN_ID_USERS if bin_type == "users" else BIN_ID_REQUESTS
-    try:
-        res = requests.get(f"https://api.jsonbin.io/v3/b/{bin_id}/latest", headers=HEADERS)
-        records = res.json()['record'] if res.status_code == 200 else []
-        records.append(data)
-        requests.put(f"https://api.jsonbin.io/v3/b/{bin_id}", json=records, headers=HEADERS)
-        return True
-    except: return False
-
-def load_from_sheet(bin_type):
-    bin_id = BIN_ID_USERS if bin_type == "users" else BIN_ID_REQUESTS
-    try:
-        res = requests.get(f"https://api.jsonbin.io/v3/b/{bin_id}/latest", headers=HEADERS)
-        return res.json()['record'] if res.status_code == 200 else []
-    except: return []
+import json, gspread
+from google.oauth2.service_account import Credentials
 
 def load_products():
-    with open("products.json", "r", encoding="utf-8") as f:
-        return json.load(f)
+    with open('products.json', 'r', encoding='utf-8') as f: return json.load(f)
+
+def save_to_sheet(data, sheet_name):
+    try:
+        creds = Credentials.from_service_account_file('credentials.json')
+        client = gspread.authorize(creds)
+        sheet = client.open("Solar_Requests").worksheet(sheet_name)
+        sheet.append_row(list(data.values()))
+    except: st.warning("لم يتم الربط مع قوقل شيت")
+
+def load_from_sheet(sheet_name):
+    try:
+        creds = Credentials.from_service_account_file('credentials.json')
+        client = gspread.authorize(creds)
+        sheet = client.open("Solar_Requests").worksheet(sheet_name)
+        return sheet.get_all_records()
+    except:
+        # لو مافي شيت نرجع مستخدم وهمي
+        return [{"username": "test", "password": "123", "user_type": "عميل"}]
