@@ -1,14 +1,13 @@
 import streamlit as st
 from utils import load_css, show_logo_as_cover
 
-# حددنا الاسامي هنا بدل نجيبها من config
 COMPANY_NAME = "SSE - الطاقة الشمسية الذكية"
 FOOTER = "© 2026 SSE. جميع الحقوق محفوظة"
 
 st.set_page_config(
     page_title=COMPANY_NAME, 
     layout="wide", 
-    page_icon="☀️",  # شلنا logo.ico وخليتها ايموجي
+    page_icon="☀️",
     initial_sidebar_state="collapsed"
 )
 
@@ -24,4 +23,6 @@ c1.metric("السرعة", "3 دقايق", "لحساب نظامك")
 c2.metric("الضمان", "10 سنوات", "على التركيب")
 c3.metric("الدعم", "24/7", "واتساب مباشر")
 
-st.info("👈
+st.info("ابدأ من القائمة الجانبية > تسجيل الدخول")  # شلت الايموجي
+
+st.markdown(f"<center>{FOOTER}</center>", unsafe_allow_html=True)
