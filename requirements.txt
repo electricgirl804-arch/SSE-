@@ -5,7 +5,6 @@ streamlit-folium
 pandas
 openpyxl
 google-auth
-google-cloud-firestore
 gspread
 Pillow
 reportlab
@@ -13,8 +12,6 @@ qrcode
 python-dotenv
 folium
 geopy
-pvlib
-timezonefinder
 plotly
 requests
 google-generativeai
