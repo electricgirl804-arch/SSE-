@@ -1,15 +1,40 @@
 import streamlit as st
-from utils import load_css
-st.set_page_config(page_title="SSE للطاقة الشمسية", layout="wide", page_icon="☀️")
+from utils import load_css, show_header, check_login, logout
+
+st.set_page_config(
+    page_title="SSE - Smart Solara Engineer",
+    page_icon="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKACAYAAAB6uZQaAAAgAElEQVR4AezdB7Ak5XUo4M/7...END", # ختي اول 200 حرف من كود الشعار الفي utils
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# 1. نشغل الاستايل والخلفية والشعار
 load_css()
 
-st.title("☀️ SSE للطاقة الشمسية الذكية")
-st.markdown("### بيع + تأجير + موردين في مكان واحد")
+# 2. نتأكد من تسجيل الدخول. لو ما مسجل بديك صفحة الدخول ويقيف هنا
+check_login()
 
-col1, col2 = st.columns(2)
+# 3. لو مسجل بديك الهيدر + زر الخروج في السايدبار
+show_header()
+logout()
+
+# 4. محتوى الصفحة الرئيسية
+st.markdown("<h1 style='text-align:center; color:white;'>🌞 مرحبا بك في SSE</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:white;'>بيع + تأجير + موردين في مكان واحد</p>", unsafe_allow_html=True)
+
+st.divider()
+
+col1, col2, col3 = st.columns(3)
 with col1:
-    st.page_link("pages/06_🛒_السلة_والمتجر.py", label="🛒 ادخل المتجر")
+    st.page_link("pages/02_🛠️_الأحمال.py", label="📊 حساب الأحمال", icon="⚡")
+    st.page_link("pages/09_🌍_الخريطة_العالمية.py", label="🌍 الخريطة + ناسا", icon="🗺️")
 with col2:
-    st.page_link("pages/15_📊_لوحة_الادمن.py", label="📊 لوحة الادمن")
+    st.page_link("pages/06_🛒_السلة_والمتجر.py", label="🛍️ المتجر", icon="🛒")
+    st.page_link("pages/14_🤖_بوت_Gemini.py", label="🤖 بوت Gemini", icon="🤖")
+with col3:
+    st.page_link("pages/15_لوحة_الأدمن.py", label="📊 لوحة الأدمن", icon="⚙️")
+    st.page_link("pages/07_📄_التقرير_والعقد.py", label="📄 التقرير والعقد", icon="📄")
 
+st.divider()
 st.info("📱 للدفع: حول على الرقم 0110560222 و رسل الاشعار واتساب")
+st.caption("SSE v3.0 | شركة شهد للطاقة الشمسية")
