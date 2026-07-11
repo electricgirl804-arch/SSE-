@@ -1,21 +1,5 @@
 import streamlit as st
-import sqlite3
-import hashlib
-
-DB_NAME = "users.db"
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, user_type TEXT)''')
-    admin_pass = hash_password("shahd8499")
-    c.execute("INSERT OR REPLACE INTO users (username, password, user_type) VALUES (?,?,?)", ("م شهد", admin_pass, "admin"))
-    conn.commit()
-    conn.close()
-init_db()
+from database import load_from_sheet, save_to_sheet
 
 def load_css():
     st.markdown("""<style>.stApp { direction: rtl; text-align: right; }</style>""", unsafe_allow_html=True)
@@ -33,34 +17,38 @@ def check_login():
 
         with tab1:
             user_type = st.radio("سجل كـ", ["عميل", "ادمن"], horizontal=True)
-            username = st.text_input("الاسم / رقم الهاتف / الايميل")
+            username = st.text_input("الاسم")
             password = st.text_input("كلمة السر", type="password")
             if st.button("دخول", use_container_width=True):
-                conn = sqlite3.connect(DB_NAME); c = conn.cursor()
-                c.execute("SELECT * FROM users WHERE username=? AND password=? AND user_type=?", (username, hash_password(password), user_type))
-                user = c.fetchone(); conn.close()
-                if user:
+
+                # الادمن الثابت
+                if user_type == "admin" and username == "م شهد" and password == "shahd8499":
                     st.session_state.logged_in = True
-                    st.session_state.user_type = user_type
+                    st.session_state.user_type = "admin"
                     st.session_state.username = username
                     st.success(f"اهلا {username}")
                     st.rerun()
+
+                # العملاء من الشيت
                 else:
+                    users = load_from_sheet("users")
+                    for user in users:
+                        if user['username'] == username and user['password'] == password and user['user_type'] == user_type:
+                            st.session_state.logged_in = True
+                            st.session_state.user_type = user_type
+                            st.session_state.username = username
+                            st.success(f"اهلا {username}")
+                            st.rerun()
                     st.error("البيانات خطأ")
 
-        with tab2:
+        with tab2: # تسجيل جديد للعملاء
             new_user = st.text_input("انشئ اسم مستخدم", key="newu")
             new_pass = st.text_input("انشئ كلمة سر", type="password", key="newp")
             if st.button("انشاء حساب"):
                 if new_user and new_pass:
-                    conn = sqlite3.connect(DB_NAME); c = conn.cursor()
-                    try:
-                        c.execute("INSERT INTO users (username, password, user_type) VALUES (?,?,?)", (new_user, hash_password(new_pass), "client"))
-                        conn.commit()
-                        st.success("تم انشاء الحساب. امشي تبويب دخول")
-                    except:
-                        st.error("الاسم دا مستخدم قبل كدا")
-                    conn.close()
+                    data = {"username": new_user, "password": new_pass, "user_type": "client"}
+                    save_to_sheet(data, "users") # بنحفظ في ورقة users
+                    st.success("تم انشاء الحساب. امشي تبويب دخول")
                 else:
                     st.error("املأ كل الحقول")
         st.stop()
