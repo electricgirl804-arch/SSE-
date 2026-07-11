@@ -3,18 +3,18 @@ from utils import load_css, show_header, check_login, logout
 
 st.set_page_config(
     page_title="SSE - Smart Solara Engineer",
-    page_icon="🌞",  # غيرتو لايموجي عشان ما يعلق
+    page_icon="logo.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 1. نشغل الاستايل والخلفية والشعار
+# 1. نشغل الاستايل والخلفية
 load_css()
 
-# 2. مؤقتا: علقنا تسجيل الدخول عشان نجرب
-# check_login()
+# 2. نتأكد من تسجيل الدخول
+check_login()
 
-# 3. لو مسجل بديك الهيدر + زر الخروج في السايدبار
+# 3. الهيدر + زر الخروج
 show_header()
 logout()
 
@@ -38,3 +38,4 @@ with col3:
 st.divider()
 st.info("📱 للدفع: حول على الرقم 0110560222 و رسل الاشعار واتساب")
 st.caption("SSE v3.0 | شركة شهد للطاقة الشمسية")
+
