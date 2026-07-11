@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import math
+from utils import check_login, logout
+
+check_login(); logout()
 
 st.set_page_config(page_title="SSE - المحاكي", page_icon="⚡", layout="wide")
 
@@ -24,7 +27,7 @@ st.caption("تم التطوير بواسطة فريق SSE | IEC 60364 + NEC 430"
 if 'total_kwh' not in st.session_state or 'irradiance' not in st.session_state:
     st.error("⚠️ يرجى الرجوع لصفحة الأحمال وإضافة الأجهزة أولاً")
     if st.button("🔙 الرجوع لصفحة الأحمال"):
-        st.switch_page("pages/02_🔌_الأحمال.py")
+        st.switch_page("pages/02_⚡_الأحمال.py")
     st.stop()
 
 # قراءة البيانات من الصفحات السابقة
@@ -34,7 +37,7 @@ total_va = st.session_state.get('total_va', total_kwh * 1000 / 0.85)
 total_surge = st.session_state.get('total_surge', total_kwh * 1000 * 2)
 tilt = st.session_state.get('tilt', 15)
 azimuth = st.session_state.get('azimuth', 180)
-pr = st.session_state.pr
+pr = st.session_state.get('pr', 0.8)
 
 st.info(f"الإشعاع من ناسا: {irradiance:.2f} kWh/m²/day | زاوية الميلان: {tilt:.1f}° | اتجاه: {azimuth}°")
 
