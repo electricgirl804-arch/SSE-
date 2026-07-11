@@ -1,11 +1,9 @@
 streamlit
-streamlit-option-menu
-streamlit-folium
+requests
 pandas
-openpyxl
 python-dotenv
+google-generativeai
+openpyxl
 folium
 geopy
 plotly
-requests
-google-generativeai
