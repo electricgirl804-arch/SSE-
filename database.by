@@ -1,23 +1,59 @@
-import json, gspread
-from google.oauth2.service_account import Credentials
+import json
+import os
+import datetime
+from fpdf import FPDF
+
+FILE_ORDERS = "orders.json"
+FILE_SUPPLIERS = "suppliers.json"
+
+def load_json(filename):
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_json(filename, data):
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 def load_products():
-    with open('products.json', 'r', encoding='utf-8') as f: return json.load(f)
+    return {
+        "panels": [{"brand": "Jinko 550W", "price_SA": 680, "price_EG": 8500, "price_SD": 180, "price_UAE": 660, "price_USD": 180, "stock": 50, "watt": 550}],
+        "inverters": [{"brand": "Growatt 5KW", "price_SA": 2400, "price_EG": 30000, "price_SD": 650, "price_UAE": 2350, "price_USD": 650, "stock": 20, "kw": 5}],
+        "batteries": [{"brand": "LiFePO4 200AH", "price_SA": 1400, "price_EG": 18000, "price_SD": 380, "price_UAE": 1380, "price_USD": 380, "stock": 40, "ah": 200}],
+        "tax": {"SA":0.15, "EG":0.14, "SD":0.17, "UAE":0.05, "USD":0},
+        "shipping": {"SA":200, "EG":500, "SD":50, "UAE":150, "USD":30}
+    }
 
 def save_to_sheet(data, sheet_name):
-    try:
-        creds = Credentials.from_service_account_file('credentials.json')
-        client = gspread.authorize(creds)
-        sheet = client.open("Solar_Requests").worksheet(sheet_name)
-        sheet.append_row(list(data.values()))
-    except: st.warning("لم يتم الربط مع قوقل شيت")
+    if sheet_name == "orders":
+        orders = load_json(FILE_ORDERS)
+        data["id"] = len(orders) + 1001
+        data["status"] = "في انتظار الدفع"
+        orders.append(data)
+        save_json(FILE_ORDERS, orders)
+    if sheet_name == "suppliers":
+        suppliers = load_json(FILE_SUPPLIERS)
+        suppliers.append(data)
+        save_json(FILE_SUPPLIERS, suppliers)
 
-def load_from_sheet(sheet_name):
-    try:
-        creds = Credentials.from_service_account_file('credentials.json')
-        client = gspread.authorize(creds)
-        sheet = client.open("Solar_Requests").worksheet(sheet_name)
-        return sheet.get_all_records()
-    except:
-        # لو مافي شيت نرجع مستخدم وهمي
-        return [{"username": "test", "password": "123", "user_type": "عميل"}]
+def load_orders(): return load_json(FILE_ORDERS)
+def load_suppliers(): return load_json(FILE_SUPPLIERS)
+
+def create_invoice_pdf(order):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=14)
+    pdf.cell(200, 10, txt="SSE للطاقة الشمسية", ln=True, align="C")
+    pdf.cell(200, 10, txt=f"فاتورة رقم: {order['id']}", ln=True, align="C")
+    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"الاسم: {order['name']}", ln=True)
+    pdf.cell(200, 10, txt=f"التلفون: {order['phone']}", ln=True)
+    pdf.cell(200, 10, txt=f"التاريخ: {datetime.date.today()}", ln=True)
+    pdf.cell(200, 10, txt=f"الدفع: 0110560222", ln=True)
+    pdf.ln(5)
+    pdf.cell(200, 10, txt=f"المنتجات: {order['items']}", ln=True)
+    pdf.cell(200, 10, txt=f"الاجمالي: {order['total']}$", ln=True)
+    filename = f"invoice_{order['id']}.pdf"
+    pdf.output(filename)
+    return filename
