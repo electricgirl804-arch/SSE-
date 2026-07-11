@@ -6,7 +6,7 @@ def load_css():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
-  .stApp {
+   .stApp {
         direction: rtl;
         text-align: right;
         font-family: 'Cairo', sans-serif;
@@ -15,7 +15,7 @@ def load_css():
 
     h1, h2, h3 { color: #0A3D62; font-weight: 700; }
 
-  .stButton>button {
+   .stButton>button {
         background-color: #F39C12;
         color: white;
         border-radius: 12px;
@@ -24,9 +24,9 @@ def load_css():
         padding: 10px 20px;
         width: 100%;
     }
-  .stButton>button:hover { background-color: #E67E22; color: white; }
+   .stButton>button:hover { background-color: #E67E22; color: white; }
 
-  .stTextInput>div>div>input {
+   .stTextInput>div>div>input {
         border-radius: 10px;
         border: 2px solid #D6EAF8;
     }
@@ -41,6 +41,15 @@ def load_css():
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
+
+   .product-card {
+        background: rgba(255,255,255,0.95);
+        padding: 15px;
+        border-radius: 15px;
+        margin: 10px 0;
+        color: #0A3D62;
+        border: 1px solid #D6EAF8;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -48,7 +57,7 @@ def show_logo_as_cover():
     st.image("https://via.placeholder.com/1200x300/0A3D62/FFFFFF?text=SSE+الطاقة+الشمسية+الذكية", use_column_width=True)
 
 def check_login():
-    load_css() # شغلنا الاستايل هنا
+    load_css()
     if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
     if not st.session_state.logged_in:
@@ -63,18 +72,28 @@ def check_login():
             if st.button("دخول", use_container_width=True):
                 # ادمن ثابت
                 if user_type == "ادمن" and username == "م شهد" and password == "shahd8499":
-                    st.session_state.logged_in = True; st.session_state.user_type = "admin"; st.session_state.username = username; st.success(f"اهلا {username}"); st.rerun()
+                    st.session_state.logged_in = True
+                    st.session_state.user_type = "admin"
+                    st.session_state.username = username
+                    st.success(f"اهلا {username}")
+                    st.rerun()
                 else:
                     users = load_from_sheet("users")
                     found = False
                     for user in users:
                         if user['username'] == username and user['password'] == password and user['user_type'] == user_type:
-                            st.session_state.logged_in = True; st.session_state.user_type = user_type; st.session_state.username = username; st.success(f"اهلا {username}"); st.rerun()
-                            found = True; break
+                            st.session_state.logged_in = True
+                            st.session_state.user_type = user_type
+                            st.session_state.username = username
+                            st.success(f"اهلا {username}")
+                            st.rerun()
+                            found = True
+                            break
                     if not found: st.error("البيانات خطأ")
 
         with tab2:
-            new_user = st.text_input("انشئ اسم مستخدم", key="newu"); new_pass = st.text_input("انشئ كلمة سر", type="password", key="newp")
+            new_user = st.text_input("انشئ اسم مستخدم", key="newu")
+            new_pass = st.text_input("انشئ كلمة سر", type="password", key="newp")
             if st.button("انشاء حساب"):
                 if new_user and new_pass:
                     save_to_sheet({"username": new_user, "password": new_pass, "user_type": "عميل"}, "users")
@@ -86,6 +105,6 @@ def logout():
     if st.session_state.get('logged_in'):
         st.sidebar.write(f"مرحبا {st.session_state.get('username')}")
         if st.sidebar.button("تسجيل الخروج"):
-            for key in ['logged_in', 'user_type', 'username']:
+            for key in ['logged_in', 'user_type', 'username', 'cart']:
                 if key in st.session_state: del st.session_state[key]
             st.rerun()
