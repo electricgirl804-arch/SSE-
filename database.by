@@ -37,10 +37,13 @@ def save_to_sheet(data, sheet_name):
         suppliers.append(data)
         save_json(FILE_SUPPLIERS, suppliers)
 
-def load_orders(): return load_json(FILE_ORDERS)
-def load_suppliers(): return load_json(FILE_SUPPLIERS)
+def load_orders(): 
+    return load_json(FILE_ORDERS)
 
-# دي عشان utils.py ما يضرب
+def load_suppliers(): 
+    return load_json(FILE_SUPPLIERS)
+
+# دي المهمة عشان utils.py
 def load_from_sheet():
     return load_products()
 
