@@ -1,28 +1,18 @@
-import gspread
-from google.oauth2.service_account import Credentials
-import streamlit as st
+import sqlite3
 
-SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+DB_NAME = "users.db"
 
-def get_client():
-    creds_dict = st.secrets["gcp_service_account"]
-    CREDS = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
-    CLIENT = gspread.authorize(CREDS)
-    return CLIENT
-
-def save_to_sheet(data, sheet_name):
-    try:
-        CLIENT = get_client()
-        SHEET = CLIENT.open("SSE_Database")
-        worksheet = SHEET.worksheet(sheet_name)
-        worksheet.append_row(list(data.values()))
-        return True
-    except Exception as e:
-        st.error(f"خطأ في الحفظ في قوقل شيت: {e}")
-        return False
-
-def load_from_sheet(sheet_name):
-    CLIENT = get_client()
-    SHEET = CLIENT.open("SSE_Database")
-    worksheet = SHEET.worksheet(sheet_name)
-    return worksheet.get_all_records()
+def save_to_sheet(name, phone, total_watt, system_size):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    # نعمل جدول لو ما موجود
+    c.execute('''CREATE TABLE IF NOT EXISTS requests
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                 name TEXT, phone TEXT, total_watt REAL, system_size TEXT, date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+    
+    # نخزن البيانات
+    c.execute("INSERT INTO requests (name, phone, total_watt, system_size) VALUES (?,?,?,?)",
+              (name, phone, total_watt, system_size))
+    conn.commit()
+    conn.close()
