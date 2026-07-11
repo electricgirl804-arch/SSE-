@@ -4,23 +4,21 @@ import hashlib
 
 DB_NAME = "users.db"
 
-# دالة تشفير كلمة السر
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-# انشاء قاعدة البيانات والجداول
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, user_type TEXT)''')
-    # نضيف الادمن تلقائي لو ما موجود
+    # الادمن - شلنا النقطة عشان ما تعمل مشاكل
     c.execute("INSERT OR IGNORE INTO users (username, password, user_type) VALUES (?, ?, ?)",
-              ("م.شهد", hash_password("shahd8499"), "admin"))
+              ("م شهد", hash_password("shahd8499"), "admin"))
     conn.commit()
     conn.close()
 
-init_db() # شغليها اول ما الملف يفتح
+init_db()
 
 def check_login():
     if 'logged_in' not in st.session_state:
@@ -34,9 +32,9 @@ def check_login():
         
         tab1, tab2 = st.tabs(["دخول", "تسجيل جديد"])
         
-        with tab1: # تسجيل دخول
+        with tab1: # دخول
             user_type = st.radio("سجل كـ", ["عميل", "ادمن"], horizontal=True, key="login_type")
-            username = st.text_input("رقم الهاتف او الايميل", key="login_user")
+            username = st.text_input("الاسم / رقم الهاتف / الايميل", key="login_user")
             password = st.text_input("كلمة السر", type="password", key="login_pass")
             
             if st.button("دخول", use_container_width=True):
@@ -56,8 +54,8 @@ def check_login():
                 else:
                     st.error("البيانات خطأ")
         
-        with tab2: # تسجيل جديد للعملاء فقط
-            new_user = st.text_input("رقم الهاتف او الايميل الجديد")
+        with tab2: # تسجيل جديد
+            new_user = st.text_input("انشئ اسم مستخدم")
             new_pass = st.text_input("انشئ كلمة سر", type="password")
             if st.button("انشاء حساب"):
                 if new_user and new_pass:
@@ -69,7 +67,7 @@ def check_login():
                         conn.commit()
                         st.success("تم انشاء الحساب. امشي تبويب دخول")
                     except:
-                        st.error("الرقم او الايميل دا مستخدم قبل كدا")
+                        st.error("الاسم دا مستخدم قبل كدا")
                     conn.close()
                 else:
                     st.error("املأ كل الحقول")
@@ -82,9 +80,8 @@ def logout():
         st.session_state.username = None
         st.rerun()
 
-# الدوال القديمة عشان ما يضرب ايرور
 def load_css():
-    st.markdown("""<style>.stButton>button {width: 100%;}</style>""", unsafe_allow_html=True)
+    pass
 
 def show_logo_as_cover():
-    st.image("https://via.placeholder.com/800x200.png?text=Your+Logo", use_container_width=True)
+    pass
