@@ -24,16 +24,16 @@ def init_db():
 
 init_db()
 
-# ضفنا ديل عشان app.py ما يضرب
 def load_css():
     st.markdown("""
     <style>
     .stApp { direction: rtl; text-align: right; }
+    h1, h3 { text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
 def show_logo_as_cover():
-    pass # خليها فاضية هسي
+    st.image("https://via.placeholder.com/800x200/FFD700/000?text=SSE+Solar", use_container_width=True)
 
 def check_login():
     if 'logged_in' not in st.session_state:
