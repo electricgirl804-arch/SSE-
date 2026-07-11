@@ -5,6 +5,9 @@ import plotly.graph_objects as go
 from datetime import datetime, time
 import pvlib
 import math
+from utils import check_login, logout, load_css
+
+check_login(); logout(); load_css()
 
 st.set_page_config(page_title="SSE - محاكي الظلال", page_icon="🌤️", layout="wide")
 
@@ -69,7 +72,7 @@ elif shading_loss > 10:
 else:
     st.success("✅ التباعد مناسب")
 
-# ===== دا السحر عشان الكود التقيل ما يعلق الواجهة =====
+# ===== حساب الفقد السنوي =====
 @st.cache_data
 def calculate_annual_shading(lat, lon, obstacle_h, obstacle_dist, year):
     """حساب الفقد السنوي - 8760 ساعة"""
@@ -77,7 +80,7 @@ def calculate_annual_shading(lat, lon, obstacle_h, obstacle_dist, year):
     solpos = pvlib.solarposition.get_solarposition(hours, lat, lon, method='nrel_numpy')
 
     shadow_lengths = obstacle_h / np.tan(np.radians(solpos['elevation']))
-    shadow_lengths[solpos['elevation'] <= 10] = 0 # نهمل الشمس الواطية
+    shadow_lengths[solpos['elevation'] <= 10] = 0
 
     shading_hours = (shadow_lengths > obstacle_dist).sum()
     annual_loss = (shading_hours / len(hours)) * 100
@@ -105,7 +108,7 @@ if st.button("احسب الفقد السنوي", type="primary", use_container_w
     # خزني النتيجة للتقرير النهائي
     st.session_state.shading_loss = annual_loss
 
-# رسم 3D خفيف
+# رسم 3D
 st.divider()
 st.subheader("رسم الظل ثلاثي الأبعاد")
 
@@ -140,3 +143,6 @@ fig.update_layout(
     height=450, showlegend=True
 )
 st.plotly_chart(fig, use_container_width=True)
+
+if st.button("التالي: المعايير 📊"):
+    st.switch_page("pages/05_📚_المعايير.py")
