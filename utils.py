@@ -13,10 +13,9 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, user_type TEXT)''')
     
-    # الحل: نعمل UPDATE للادمن غصب. لو ما موجود بنعمله INSERT
     admin_pass = hash_password("shahd8499")
     c.execute("UPDATE users SET password=?, user_type=? WHERE username=?", (admin_pass, "admin", "م شهد"))
-    if c.rowcount == 0: # لو ما اتحدث معناها ما موجود
+    if c.rowcount == 0:
         c.execute("INSERT INTO users (username, password, user_type) VALUES (?, ?, ?)",
                   ("م شهد", admin_pass, "admin"))
     
@@ -24,6 +23,17 @@ def init_db():
     conn.close()
 
 init_db()
+
+# ضفنا ديل عشان app.py ما يضرب
+def load_css():
+    st.markdown("""
+    <style>
+    .stApp { direction: rtl; text-align: right; }
+    </style>
+    """, unsafe_allow_html=True)
+
+def show_logo_as_cover():
+    pass # خليها فاضية هسي
 
 def check_login():
     if 'logged_in' not in st.session_state:
@@ -37,7 +47,7 @@ def check_login():
         
         tab1, tab2 = st.tabs(["دخول", "تسجيل جديد"])
         
-        with tab1: # دخول
+        with tab1:
             user_type = st.radio("سجل كـ", ["عميل", "ادمن"], horizontal=True, key="login_type")
             username = st.text_input("الاسم / رقم الهاتف / الايميل", key="login_user")
             password = st.text_input("كلمة السر", type="password", key="login_pass")
@@ -59,7 +69,7 @@ def check_login():
                 else:
                     st.error("البيانات خطأ")
         
-        with tab2: # تسجيل جديد
+        with tab2:
             new_user = st.text_input("انشئ اسم مستخدم")
             new_pass = st.text_input("انشئ كلمة سر", type="password")
             if st.button("انشاء حساب"):
