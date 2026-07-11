@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import hashlib
-import os
 
 DB_NAME = "users.db"
 
@@ -9,18 +8,18 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def init_db():
-    # نمسح القاعدة القديمة لو موجودة عشان نبدأ نضيف
-    if os.path.exists(DB_NAME):
-        os.remove(DB_NAME)
-        
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, user_type TEXT)''')
     
-    # نضيف الادمن
-    c.execute("INSERT INTO users (username, password, user_type) VALUES (?, ?, ?)",
-              ("م شهد", hash_password("shahd8499"), "admin"))
+    # الحل: نعمل UPDATE للادمن غصب. لو ما موجود بنعمله INSERT
+    admin_pass = hash_password("shahd8499")
+    c.execute("UPDATE users SET password=?, user_type=? WHERE username=?", (admin_pass, "admin", "م شهد"))
+    if c.rowcount == 0: # لو ما اتحدث معناها ما موجود
+        c.execute("INSERT INTO users (username, password, user_type) VALUES (?, ?, ?)",
+                  ("م شهد", admin_pass, "admin"))
+    
     conn.commit()
     conn.close()
 
@@ -85,9 +84,3 @@ def logout():
         st.session_state.user_type = None
         st.session_state.username = None
         st.rerun()
-
-def load_css():
-    pass
-
-def show_logo_as_cover():
-    pass
