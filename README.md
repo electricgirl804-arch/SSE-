@@ -1,2 +1,0 @@
-# SSE-
-Smart Solara Engineer 
