@@ -4,7 +4,7 @@ import os
 DB_FILE = "database.json"
 SUPPLIERS_FILE = "suppliers.json"
 
-# بيانات افتراضية لو الملف فاضي
+# بيانات افتراضية لو الملف فاضي اول مرة
 DEFAULT_PRODUCTS = {
     "panels": [
         {"brand": "Jinko 550W", "watt": 550, "stock": 50, "price_SA": 450, "price_EG": 6000, "price_SD": 70000, "price_UAE": 450, "price_USD": 120, "serial": "SSE-PV550-001"},
@@ -28,20 +28,26 @@ DEFAULT_SUPPLIERS = [
 
 def load_products():
     if not os.path.exists(DB_FILE):
-        with open(DB_FILE, 'w') as f: json.dump(DEFAULT_PRODUCTS, f)
-    with open(DB_FILE, 'r') as f: return json.load(f)
+        with open(DB_FILE, 'w', encoding='utf-8') as f: 
+            json.dump(DEFAULT_PRODUCTS, f, ensure_ascii=False, indent=4)
+    with open(DB_FILE, 'r', encoding='utf-8') as f: 
+        return json.load(f)
 
 def load_suppliers():
     if not os.path.exists(SUPPLIERS_FILE):
-        with open(SUPPLIERS_FILE, 'w') as f: json.dump(DEFAULT_SUPPLIERS, f)
-    with open(SUPPLIERS_FILE, 'r') as f: return json.load(f)
+        with open(SUPPLIERS_FILE, 'w', encoding='utf-8') as f: 
+            json.dump(DEFAULT_SUPPLIERS, f, ensure_ascii=False, indent=4)
+    with open(SUPPLIERS_FILE, 'r', encoding='utf-8') as f: 
+        return json.load(f)
 
 def save_to_sheet(data, sheet_name):
     """بنحفظ في ملف محلي بدل قوقل شيت"""
     file = f"{sheet_name}.json"
     all_data = []
     if os.path.exists(file):
-        with open(file, 'r') as f: all_data = json.load(f)
+        with open(file, 'r', encoding='utf-8') as f: 
+            all_data = json.load(f)
     all_data.append(data)
-    with open(file, 'w') as f: json.dump(all_data, f)
+    with open(file, 'w', encoding='utf-8') as f: 
+        json.dump(all_data, f, ensure_ascii=False, indent=4)
     return True
