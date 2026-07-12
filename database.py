@@ -5,6 +5,7 @@ from fpdf import FPDF
 
 FILE_ORDERS = "orders.json"
 FILE_SUPPLIERS = "suppliers.json"
+FILE_USERS = "users.json"  # ضفناه
 
 def load_json(filename):
     if os.path.exists(filename):
@@ -42,6 +43,14 @@ def load_orders():
 
 def load_suppliers(): 
     return load_json(FILE_SUPPLIERS)
+
+# دي الضفناها عشان الادمن
+def load_users():
+    return load_json(FILE_USERS)
+
+# دي الضفناها عشان save_file في الادمن
+def save_file(filename, data):
+    save_json(filename, data)
 
 # دي المهمة عشان utils.py
 def load_from_sheet():
