@@ -10,4 +10,3 @@ geopy
 folium
 streamlit-folium
 plotly
-streamlit-geolocator
