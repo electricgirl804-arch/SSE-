@@ -1,6 +1,7 @@
 import streamlit as st
 from utils import check_login, logout, load_css
 from database import load_products, save_to_sheet, load_suppliers
+
 check_login(); logout(); load_css()
 
 st.set_page_config(page_title="المتجر - SSE", layout="wide")
@@ -31,7 +32,6 @@ with tabs[0]: # الواح
         c2.write(f"المخزون: {prod['stock']}")
         c3.metric("السعر", f"{price} {currency}")
         if c4.button("➕ اضافة", key=f"panel_{prod['brand']}"):
-            # لو المنتج موجود زيد الكمية
             found = False
             for item in st.session_state.cart:
                 if item['name'] == prod['brand']:
