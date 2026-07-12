@@ -17,12 +17,11 @@ c1, c2, c3, c4 = st.columns(4)
 c1.metric("📦 الطلبات", len(orders))
 c2.metric("🏭 الموردين", len(suppliers))
 c3.metric("👥 العملاء", len(users))
-c4.metric("⏳ معلقين", len([s for s in suppliers if s['status']=="معلق"]))
+c4.metric("⏳ معلقين", len([s for s in suppliers if s.get('status')=="معلق"]))
 st.divider()
 
 tab1, tab2, tab3, tab4 = st.tabs(["📦 الطلبات", "🏭 الموردين", "👥 العملاء", "💾 نسخ احتياطي"])
 
-# تبويب 1: الطلبات
 with tab1:
     st.subheader("ادارة الطلبات")
     if orders:
@@ -37,7 +36,6 @@ with tab1:
                 c2.markdown(f"**المبلغ:** {order['total']} $")
                 c3.markdown(f"**الحالة الحالية:** `{order['status']}`")
 
-                # زرار تغيير الحالة
                 حالة_جديدة = c4.selectbox(
                     "تغيير الحالة",
                     ["في انتظار الدفع", "تم الدفع", "قيد التجهيز", "تم الشحن", "مكتمل", "ملغي"],
@@ -49,7 +47,6 @@ with tab1:
                     st.success(f"تم تحديث طلب {order['id']}"); st.rerun()
     else: st.info("لا يوجد طلبات بعد")
 
-# تبويب 2: الموردين
 with tab2:
     st.subheader("ادارة الموردين")
     if suppliers:
@@ -58,14 +55,13 @@ with tab2:
                 c1, c2, c3, c4 = st.columns([3,2,2,1])
                 c1.markdown(f"**{s['brand']}** \n `{s['category']}`")
                 c2.markdown(f"**السعر:** {s.get('price','')} $")
-                c3.markdown(f"**الحالة:** {s['status']}")
-                if s['status'] == "معلق":
+                c3.markdown(f"**الحالة:** {s.get('status','')}")
+                if s.get('status') == "معلق":
                     if c4.button("✅ تفعيل", key=f"app{i}"):
                         suppliers[i]['status'] = "مفعل"
                         save_file("suppliers.json", suppliers); st.rerun()
     else: st.info("لا يوجد موردين بعد")
 
-# تبويب 3 و 4 زي ما هم
 with tab3:
     if users: st.dataframe(pd.DataFrame(users), use_container_width=True)
     else: st.info("لا يوجد عملاء بعد")
