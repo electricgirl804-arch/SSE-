@@ -1,45 +1,101 @@
-import streamlit as st, pandas as pd, numpy as np, datetime, pvlib, folium
-from utils import check_login, logout
-from database import load_products, save_to_sheet
-from streamlit_geolocator import geolocator
-from streamlit_folium import st_folium
-from timezonefinder import TimezoneFinder
-check_login(); logout()
-st.title("الحاسبة الذكية بناسا ☀️")
+import streamlit as st
+from utils import load_css, show_header, check_login, logout
 
-p = load_products()
-location = geolocator("حدد موقعك")
-lat, lon = (location['latitude'], location['longitude']) if location else (15.5, 32.5)
+st.set_page_config(page_title="حساب الأحمال", page_icon="🔧", layout="wide")
 
-m = folium.Map(location=[lat, lon], zoom_start=10)
-folium.Marker([lat, lon]).add_to(m)
-st_folium(m, width=700, height=300)
+st.markdown("""
+    <style>
+    header[data-testid="stHeader"] {display: none;}
+    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
 
-place_type = st.selectbox("نوع المكان", list(p['places'].keys()))
-place_data = p['places'][place_type]
+load_css()
+check_login()
+show_header()
+logout()
 
-total_watt, total_energy = 0, 0
-for device in p['devices'][place_type]:
-    qty = st.number_input(f"عدد {device['name']}", 0, 100, device.get('qty',1), key=device['name'])
-    if qty > 0: total_watt += device['watt'] * qty; total_energy += device['watt'] * qty * device['hours'] / 1000
+st.title("🔧 حساب الأحمال الكهربائية")
+st.caption("احسب استهلاكك اليومي وعدد الألواح والبطاريات المطلوبة")
 
-system_kw = (total_watt * place_data['backup']) / 1000
-tilt, azimuth = abs(lat), 180 if lat > 0 else 0
-tf = TimezoneFinder(); tz = tf.timezone_at(lng=lon, lat=lat)
-times = pd.date_range(start=f"{datetime.datetime.now().year}-01-01", periods=8760, freq='h', tz=tz)
-weather = pvlib.iotools.get_psm3(lat, lon, api_key='YOUR_NREL_KEY', email='test@test.com')[0]
-poa = pvlib.irradiance.get_total_irradiance(tilt, azimuth, pvlib.solarposition.get_solarposition(times, lat, lon)['zenith'], pvlib.solarposition.get_solarposition(times, lat, lon)['azimuth'], weather['DNI'], weather['GHI'], weather['DHI'])
-energy_year = (system_kw * 1000 * (poa['poa_global'] / 1000) * 0.8).sum() / 1000
+# تهيئة الجلسة
+if 'loads' not in st.session_state:
+    st.session_state['loads'] = []
 
-st.metric("الانتاج السنوي", f"{energy_year:.0f} KWh")
+with st.form("add_device"):
+    st.subheader("اضافة جهاز")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        device_name = st.text_input("اسم الجهاز", placeholder="مثال: ثلاجة")
+    with col2:
+        power = st.number_input("القدرة بالوات W", min_value=1, value=100)
+    with col3:
+        hours = st.number_input("ساعات التشغيل / اليوم", min_value=0.5, step=0.5, value=8.0)
+    
+    add_btn = st.form_submit_button("➕ اضافة للجدول")
 
-inv = st.selectbox("الانفرتر", p['inverters'], format_func=lambda x: f"{x['brand']}")
-bat = st.selectbox("البطارية", p['batteries'], format_func=lambda x: f"{x['brand']}")
+if add_btn and device_name:
+    kwh = (power * hours) / 1000
+    st.session_state['loads'].append({
+        "device": device_name,
+        "power": power,
+        "hours": hours,
+        "kwh": kwh
+    })
+    st.success(f"تم اضافة {device_name}")
+    st.rerun()
 
-if total_watt > inv['kw']*1000: st.error("⚠️ الحمل اكبر من الانفرتر"); can_run=False
-else: st.success("✅ النظام متوافق"); can_run=True
+st.divider()
 
-name, phone = st.text_input("اسمك"), st.text_input("رقمك")
-if can_run and st.button("ارسال الطلب"):
-    save_to_sheet({"name":name,"phone":phone,"type":place_type,"kw":system_kw,"energy":energy_year}, "requests")
-    st.success("تم الارسال")
+if st.session_state['loads']:
+    st.subheader("📋 جدول الأجهزة")
+    
+    total_kwh = 0
+    for i, item in enumerate(st.session_state['loads']):
+        col1, col2, col3, col4, col5 = st.columns([3,2,2,2,1])
+        col1.write(f"**{item['device']}**")
+        col2.write(f"{item['power']} W")
+        col3.write(f"{item['hours']} ساعة")
+        col4.write(f"{item['kwh']:.2f} kWh")
+        if col5.button("🗑️", key=i):
+            st.session_state['loads'].pop(i)
+            st.rerun()
+        total_kwh += item['kwh']
+    
+    st.metric("اجمالي الاستهلاك اليومي", f"{total_kwh:.2f} kWh/يوم")
+    
+    st.divider()
+    st.subheader("⚡ التوصيات")
+    
+    # حساب تقريبي للالواح والبطاريات
+    sun_hours = 5  # متوسط ساعات الشمس
+    system_loss = 1.3
+    
+    panel_watt = 550
+    battery_ah = 200
+    battery_volt = 12
+    
+    required_panel = (total_kwh * 1000 * system_loss) / sun_hours
+    panels_needed = int(required_panel / panel_watt) + 1
+    
+    battery_kwh = total_kwh * 2  # يومين
+    battery_needed = int((battery_kwh * 1000) / (battery_ah * battery_volt)) + 1
+    
+    col1, col2 = st.columns(2)
+    col1.metric("عدد الألواح 550W المقترح", panels_needed)
+    col2.metric("عدد البطاريات 200Ah المقترح", battery_needed)
+    
+    if st.button("🛒 اضافة للسلة"):
+        st.session_state['total_load'] = total_kwh
+        st.success("تم حفظ الاستهلاك. امشي المتجر")
+        st.page_link("pages/06_🛒_السلة_والمتجر.py", label="انتقل للمتجر")
+    
+    if st.button("مسح الكل"):
+        st.session_state['loads'] = []
+        st.rerun()
+else:
+    st.info("لم تضف اي اجهزة بعد")
+
+st.divider()
+st.page_link("app.py", label="🏠 الرجوع للرئيسية")
