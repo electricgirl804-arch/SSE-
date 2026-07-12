@@ -6,8 +6,7 @@ openpyxl
 python-dateutil
 pillow
 qrcode
-plotly
 geopy
-pvlib
 folium
 streamlit-folium
+plotly
