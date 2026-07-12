@@ -5,6 +5,8 @@ plotly
 geopy
 qrcode
 fpdf2
-google-generativeai
-pvlib
 pillow
+requests
+openpyxl
+python-dateutil
+google-generativeai5
