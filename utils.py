@@ -19,3 +19,15 @@ def show_header():
             <p style="color:#cce5ff; text-align:center; margin:0; font-size:14px;">بيع + تأجير + موردين في مكان واحد</p>
         </div>
     """, unsafe_allow_html=True)
+
+def check_login():
+    if 'logged_in' not in st.session_state:
+        st.session_state.logged_in = False
+    if not st.session_state.logged_in:
+        st.warning("يجب تسجيل الدخول اولا")
+        st.stop()
+
+def logout():
+    if st.sidebar.button("🚪 تسجيل الخروج"):
+        st.session_state.logged_in = False
+        st.rerun()
