@@ -1,0 +1,32 @@
+/* الوان شعار SSE الرسمية */
+.stApp {
+    direction: rtl;
+    font-family: 'Cairo', sans-serif;
+}
+
+h1, h2, h3 {
+    color: #0056b3; /* ازرق SSE */
+}
+
+.stButton>button {
+    background-color: #0056b3; 
+    color: white;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+}
+.stButton>button:hover {
+    background-color: #FF6F00; /* برتقالي SSE */
+    transform: scale(1.02);
+}
+
+[data-testid="stSidebar"] {
+    background-color: #F0F7FF; /* ازرق فاتح جدا */
+}
+
+[data-testid="stMetric"] {
+    border-left: 5px solid #FF6F00; /* لمسة برتقالي */
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+}
