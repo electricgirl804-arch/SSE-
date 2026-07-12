@@ -23,7 +23,7 @@ h1 {color: #FFD700!important; font-weight: 700; text-align: center;}
 """, unsafe_allow_html=True)
 
 st.title("🌤️ محاكي الظلال ثلاثي الأبعاد SSE")
-st.caption("تم التطوير بواسطة المهندسة شهد | IEC 61724")
+st.caption("تم التطوير بواسطة المهندس/ة شهد | IEC 61724")
 
 # قراءة الموقع من صفحة 01
 if 'lat' in st.session_state and 'lon' in st.session_state:
@@ -31,7 +31,7 @@ if 'lat' in st.session_state and 'lon' in st.session_state:
     lon = st.session_state.lon
     st.success(f"📍 الموقع: {lat:.4f}°N, {lon:.4f}°E")
 else:
-    st.warning("⚠️ ارجعي للصفحة الرئيسية وحددي الموقع GPS أولاً")
+    st.warning("⚠️ الرجوع للصفحة الرئيسية وتحديد الموقع GPS أولاً")
     lat = st.number_input("خط العرض", 10.0, 23.0, 15.5, 0.1)
     lon = st.number_input("خط الطول", 20.0, 40.0, 32.5, 0.1)
 
@@ -68,7 +68,7 @@ c4.metric("نسبة الفقد", f"{shading_loss:.0f}%", delta="خطير" if sha
 if shading_loss > 30:
     st.error("⚠️ الظل يغطي أكثر من 30% حسب IEC 61727")
 elif shading_loss > 10:
-    st.warning("⚠️ فقد 10-30% راجعي التباعد")
+    st.warning("⚠️ فقد 10-30% يجب مراجعة التباعد")
 else:
     st.success("✅ التباعد مناسب")
 
@@ -100,12 +100,12 @@ if st.button("احسب الفقد السنوي", type="primary", use_container_w
     col2.metric("الفقد السنوي المتوقع", f"{annual_loss:.1f}%")
 
     if annual_loss > 5:
-        st.error(f"⚠️ الفقد {annual_loss:.1f}% عالي! لازم تبعدي العائق أو ترفعي الصفوف")
+        st.error(f"⚠️ الفقد {annual_loss:.1f}% عالي! يجب إبعاد العائق أو زيادة ارتفاع الصفوف")
         st.info(f"المسافة الآمنة حسب IEC: {obstacle_h * 2.5:.1f} متر")
     else:
         st.success(f"✅ الفقد {annual_loss:.1f}% مقبول حسب المعايير")
 
-    # خزني النتيجة للتقرير النهائي
+    # تخزين النتيجة للتقرير النهائي
     st.session_state.shading_loss = annual_loss
 
 # رسم 3D
