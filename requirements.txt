@@ -1,12 +1,5 @@
 streamlit==1.59.1
 pandas
 fpdf2
-requests
-openpyxl
-python-dateutil
-pillow
-qrcode
-geopy
-folium
-streamlit-folium
-plotly
+requestsstreamlit==1.59.1
+pandas
