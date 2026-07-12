@@ -6,3 +6,5 @@ geopy
 qrcode
 fpdf2
 google-generativeai
+pvlib
+pillow
