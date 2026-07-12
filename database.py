@@ -3,7 +3,8 @@ import os
 
 DB_FILE = "database.json"
 SUPPLIERS_FILE = "suppliers.json"
-ORDERS_FILE = "orders.json" # ملف الطلبات الجديد
+ORDERS_FILE = "orders.json"
+USERS_FILE = "users.json"
 
 # بيانات افتراضية لو الملف فاضي اول مرة
 DEFAULT_PRODUCTS = {
@@ -27,6 +28,11 @@ DEFAULT_SUPPLIERS = [
     {"brand": "قاطع شنايدر", "price": 25, "status": "مفعل"}
 ]
 
+DEFAULT_USERS = [
+    {"email": "electricgirl804@gmail.com", "password": "shahd8499", "role": "admin"},
+    {"email": "test@test.com", "password": "1234", "role": "user"}
+]
+
 def load_products():
     if not os.path.exists(DB_FILE):
         with open(DB_FILE, 'w', encoding='utf-8') as f: 
@@ -42,14 +48,19 @@ def load_suppliers():
         return json.load(f)
 
 def load_orders():
-    """دي الدالة الناقصة - بتجيب الطلبات"""
     if not os.path.exists(ORDERS_FILE):
-        return [] # لو ما في طلبات رجع لستة فاضية
+        return []
     with open(ORDERS_FILE, 'r', encoding='utf-8') as f: 
         return json.load(f)
 
+def load_users():
+    if not os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'w', encoding='utf-8') as f: 
+            json.dump(DEFAULT_USERS, f, ensure_ascii=False, indent=4)
+    with open(USERS_FILE, 'r', encoding='utf-8') as f: 
+        return json.load(f)
+
 def save_to_sheet(data, sheet_name):
-    """بنحفظ في ملف محلي بدل قوقل شيت"""
     file = f"{sheet_name}.json"
     all_data = []
     if os.path.exists(file):
@@ -58,4 +69,9 @@ def save_to_sheet(data, sheet_name):
     all_data.append(data)
     with open(file, 'w', encoding='utf-8') as f: 
         json.dump(all_data, f, ensure_ascii=False, indent=4)
+    return True
+
+def save_file(data, filename):
+    with open(filename, 'w', encoding='utf-8') as f: 
+        json.dump(data, f, ensure_ascii=False, indent=4)
     return True
