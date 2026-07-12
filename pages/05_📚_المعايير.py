@@ -1,4 +1,5 @@
-import streamlit as st, plotly.graph_objects as go
+import streamlit as st
+import plotly.graph_objects as go
 from utils import check_login, logout, load_css
 
 check_login(); logout(); load_css()
@@ -43,7 +44,7 @@ with col2:
         "الكابلات DC": 2,
         "عدم تطابق الالواح": 2,
         "الانفيرتر": 4,
-        "الظل": 1
+        "الظل": st.session_state.get('shading_loss', 1)
     }
     total_loss = sum(losses.values())
     st.write(f"**اجمالي الفقد: {total_loss}%**")
