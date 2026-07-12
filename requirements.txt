@@ -1,6 +1,1 @@
-streamlit
-pandas
-fpdf2
-geopy
-folium
-streamlit-folium
+
