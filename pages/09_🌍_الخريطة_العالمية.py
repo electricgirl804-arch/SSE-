@@ -3,9 +3,14 @@ import folium
 import requests
 import pandas as pd
 import plotly.express as px
+from utils import load_css, check_login, logout
+from streamlit_geolocator import geolocator
 from streamlit_folium import st_folium
 
 st.set_page_config(page_title="الخريطة - SSE", layout="wide")
+load_css()
+check_login()
+logout()
 
 st.markdown("""
 <style>
@@ -18,7 +23,7 @@ h1, h2, h3 { color: #FFD700!important; font-weight: 800; text-align: center; }
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>🌍 خريطة الموقع والإشعاع الشمسي</h1>", unsafe_allow_html=True)
-st.caption("البيانات من NASA POWER | SSE v2.5")
+st.caption("البيانات من NASA POWER | SSE v3.0")
 
 def get_nasa_solar_data(lat, lon):
     """يجيب بيانات الاشعاع الشهرية من NASA POWER"""
@@ -48,59 +53,64 @@ def get_nasa_solar_data(lat, lon):
         st.error(f"خطأ في جلب البيانات: {e}")
         return None
 
-if 'lat' in st.session_state and 'lon' in st.session_state:
+# نجيب الموقع اول
+location = geolocator("📍 حدد موقعك")
+if location:
+    lat = location['latitude']
+    lon = location['longitude']
+    st.session_state.lat = lat
+    st.session_state.lon = lon
+else:
+    lat = st.session_state.get('lat', 15.5)
+    lon = st.session_state.get('lon', 32.5)
 
-    with st.spinner("⏳ جاري جلب بيانات ناسا..."):
-        df_nasa = get_nasa_solar_data(st.session_state.lat, st.session_state.lon)
+with st.spinner("⏳ جاري جلب بيانات ناسا..."):
+    df_nasa = get_nasa_solar_data(lat, lon)
 
-    if df_nasa is not None:
-        ghi_avg = df_nasa['GHI'].mean()
-        st.session_state.ghi_final = ghi_avg
-        st.session_state.final_tilt = abs(st.session_state.lat)
+if df_nasa is not None:
+    ghi_avg = df_nasa['GHI'].mean()
+    st.session_state.ghi_final = ghi_avg
+    st.session_state.final_tilt = abs(lat)
 
-        col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([2, 1])
 
-        with col1:
-            st.markdown("<div class='info-card'>", unsafe_allow_html=True)
-            st.markdown("### موقع المشروع على الخريطة")
-            m = folium.Map(location=[st.session_state.lat, st.session_state.lon], zoom_start=12, tiles="CartoDB positron")
-            folium.Marker(
-                [st.session_state.lat, st.session_state.lon],
-                popup=f"GHI المتوسط: {ghi_avg:.2f} kWh/m²/day",
-                icon=folium.Icon(color="red", icon="solar-panel", prefix="fa")
-            ).add_to(m)
-            folium.Circle([st.session_state.lat, st.session_state.lon], radius=1000, color="#FFD700", fill=True, fill_opacity=0.2).add_to(m)
-            st_folium(m, width=None, height=400, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        with col2:
-            st.markdown("<div class='info-card'>", unsafe_allow_html=True)
-            st.markdown("### 📊 ملخص البيانات")
-            st.metric("متوسط GHI السنوي", f"{ghi_avg:.2f} kWh/m²/day")
-            st.metric("اعلى شهر", f"{df_nasa.loc[df_nasa['GHI'].idxmax(), 'الشهر']} - {df_nasa['GHI'].max()} ")
-            st.metric("اقل شهر", f"{df_nasa.loc[df_nasa['GHI'].idxmin(), 'الشهر']} - {df_nasa['GHI'].min()} ")
-            st.metric("زاوية الميل", f"{st.session_state.final_tilt:.1f}°")
-            if ghi_avg > 5.5: st.success("ممتاز للطاقة الشمسية ☀️")
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        st.divider()
-        # الرسم البياني
+    with col1:
         st.markdown("<div class='info-card'>", unsafe_allow_html=True)
-        st.markdown("### 📈 الاشعاع الشمسي خلال 12 شهر")
-
-        fig = px.bar(df_nasa, x='الشهر', y='GHI',
-                     title='متوسط الاشعاع الشمسي اليومي',
-                     labels={'GHI': 'kWh/m²/day', 'الشهر': ''},
-                     color='GHI', color_continuous_scale='YlOrRd',
-                     text='GHI')
-        fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-        fig.update_layout(title_font_size=18, plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("### موقع المشروع على الخريطة")
+        m = folium.Map(location=[lat, lon], zoom_start=12, tiles="CartoDB positron")
+        folium.Marker(
+            [lat, lon],
+            popup=f"GHI المتوسط: {ghi_avg:.2f} kWh/m²/day",
+            icon=folium.Icon(color="red", icon="solar-panel", prefix="fa")
+        ).add_to(m)
+        folium.Circle([lat, lon], radius=1000, color="#FFD700", fill=True, fill_opacity=0.2).add_to(m)
+        st_folium(m, width=None, height=400, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-else:
-    st.warning("⚠️ لم يتم تحديد الموقع بعد")
-    st.page_link("01_🏠_الرئيسية.py", label="العودة للصفحة الرئيسية", icon="🏠")
+    with col2:
+        st.markdown("<div class='info-card'>", unsafe_allow_html=True)
+        st.markdown("### 📊 ملخص البيانات")
+        st.metric("متوسط GHI السنوي", f"{ghi_avg:.2f} kWh/m²/day")
+        st.metric("اعلى شهر", f"{df_nasa.loc[df_nasa['GHI'].idxmax(), 'الشهر']} - {df_nasa['GHI'].max()} ")
+        st.metric("اقل شهر", f"{df_nasa.loc[df_nasa['GHI'].idxmin(), 'الشهر']} - {df_nasa['GHI'].min()} ")
+        st.metric("زاوية الميل", f"{st.session_state.final_tilt:.1f}°")
+        if ghi_avg > 5.5: st.success("ممتاز للطاقة الشمسية ☀️")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("---")
+    st.divider()
+    st.markdown("<div class='info-card'>", unsafe_allow_html=True)
+    st.markdown("### 📈 الاشعاع الشمسي خلال 12 شهر")
+
+    fig = px.bar(df_nasa, x='الشهر', y='GHI',
+                 title='متوسط الاشعاع الشمسي اليومي',
+                 labels={'GHI': 'kWh/m²/day', 'الشهر': ''},
+                 color='GHI', color_continuous_scale='YlOrRd',
+                 text='GHI')
+    fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+    fig.update_layout(title_font_size=18, plot_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.divider()
+st.page_link("app.py", label="🏠 الرجوع للرئيسية")
 st.caption("شركة SSE للطاقة الشمسية | الدعم الفني: 0110560222")
