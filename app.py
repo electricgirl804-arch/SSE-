@@ -8,17 +8,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 1. نشغل الاستايل والخلفية
+st.markdown("""
+    <style>
+    header[data-testid="stHeader"] {display: none;}
+    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+
 load_css()
-
-# 2. نتأكد من تسجيل الدخول
 check_login()
-
-# 3. الهيدر + زر الخروج
 show_header()
 logout()
 
-# 4. محتوى الصفحة الرئيسية
 st.markdown("<h1 style='text-align:center; color:white;'>🌞 مرحبا بك في SSE</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; color:white;'>بيع + تأجير + موردين في مكان واحد</p>", unsafe_allow_html=True)
 
@@ -37,5 +39,4 @@ with col3:
 
 st.divider()
 st.info("📱 للدفع: حول على الرقم 0110560222 و رسل الاشعار واتساب")
-st.caption("SSE v3.0 | شركة شهد للطاقة الشمسية")
-
+st.caption("SSE v3.0 | مطور")
