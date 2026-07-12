@@ -1,11 +1,8 @@
-streamlit
-fpdf
-requests
+streamlit==1.38.0
 pandas
-python-dotenv
-google-generativeai
-openpyxl
-folium
-streamlit-folium
-geopy
+numpy
 plotly
+geopy
+qrcode
+fpdf2
+google-generativeai
