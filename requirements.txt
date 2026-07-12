@@ -8,3 +8,4 @@ pillow
 qrcode
 plotly
 geopy
+pvlib
