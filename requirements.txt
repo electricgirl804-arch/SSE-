@@ -1,12 +1,11 @@
 streamlit==1.38.0
 pandas
-numpy
-plotly
-geopy
-qrcode
 fpdf2
-pillow
 requests
 openpyxl
 python-dateutil
-google-generativeai5
+pillow
+qrcode
+plotly
+geopy
+google-generativeai==0.8.3
