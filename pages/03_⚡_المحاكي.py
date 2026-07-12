@@ -27,7 +27,7 @@ st.caption("تم التطوير بواسطة م شهد | IEC 60364 + NEC 430")
 if 'total_kwh' not in st.session_state or 'irradiance' not in st.session_state:
     st.error("⚠️ يرجى الرجوع لصفحة الأحمال وإضافة الأجهزة أولاً")
     if st.button("🔙 الرجوع لصفحة الأحمال"):
-        st.switch_page("pages/02_⚡_الأحمال.py")
+        st.switch_page("pages/02_📊_الأحمال.py")
     st.stop()
 
 # قراءة البيانات من الصفحات السابقة
@@ -171,7 +171,7 @@ st.session_state.total_kwh = total_kwh
 st.session_state.battery_volt = battery_volt
 st.session_state.num_batteries = num_batteries
 st.session_state.energy_year = array_kw * irradiance * 365 * PR
-st.session_state.payback = 5 # مؤقت
+st.session_state.payback = 5
 
 st.divider()
 col1, col2 = st.columns(2)
@@ -179,7 +179,7 @@ with col1:
     if st.button("📄 التقرير النهائي PDF", use_container_width=True, type="primary"):
         st.switch_page("pages/07_📄_التقرير_والعقد.py")
 with col2:
-    if st.button("📈 مخططات التكاليف", use_container_width=True):
+    if st.button("📈 مخطات التكاليف", use_container_width=True):
         st.switch_page("pages/08_📈_المخططات.py")
 
 st.caption("الحسابات حسب IEC 60364 + NEC 690 + IEC 61727")
